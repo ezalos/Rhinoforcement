@@ -5,7 +5,28 @@ from matplotlib.table import Table
 import pandas as pd
 import numpy as np
 
+PURPLE = '\033[95m'
+BLUE = '\033[94m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+RESET = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
 
+def term_visu(board):
+    for cols in range(len(board)):
+        for rows in range(len(board[0])):
+            spot = board[cols][rows]
+            if spot == 'X':
+                print(RED + 'X' + RESET, end="")
+            elif spot == 'O':
+                print(PURPLE + 'O' + RESET, end="")
+            else:
+                print(' ', end="")
+            print(' ', end="")
+        print('\n', end="")
+    print('\n', end="")
 
 def view_board(np_data, fmt='{:s}', bkg_colors=['pink', 'pink']):
     data = pd.DataFrame(np_data, columns=['0','1','2','3','4','5','6'])
