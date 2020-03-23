@@ -23,7 +23,7 @@ def term_visu(board):
             elif spot == 'O':
                 print(PURPLE + 'O' + RESET, end="")
             else:
-                print(' ', end="")
+                print('.', end="")
             print(' ', end="")
         print('\n', end="")
     print('\n', end="")
