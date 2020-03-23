@@ -29,7 +29,7 @@ class board():
                     self.current_board[row, column] = "X"
                     self.player = 0
                     
-    # returns True or false carefull uses self.player
+    # returns True or False carefull uses self.player
     def check_winner(self, row, col):
         '''
         returns ( self.player is the winner )
@@ -88,7 +88,7 @@ class board():
                 col -= 1
         if (count >= 4):
             return (True)
-        return (false)
+        return (False)
 
     def check_winner(self):
         if self.player == 1:
