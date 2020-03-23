@@ -29,11 +29,11 @@ class board():
                     self.current_board[row, column] = "X"
                     self.player = 0
                     
-    # returns "X" "O" " "
+    # returns true or false
     def check_winner(self, row, col):
-        player = self.current_board[row, col]
+        player = ("O" if self.player == 0 else "X")
         if (player == " "):
-            return (" ")
+            return (false)
         count = 0
         row2 = row
         col2 = col
@@ -42,10 +42,10 @@ class board():
             if (self.current_board[row, col] != player):
                 count = 0
             else:
-                count+= 1
-            row+= 1
+                count += 1
+            row += 1
         if (count >= 4):
-            return (player)
+            return (true)
 
         row = row2
         count = 0
@@ -57,7 +57,7 @@ class board():
                 count += 1
             row += 1
         if (count >= 4):
-            return (player)
+            return (true)
         col = col2
         count = 0
         while (col > 0 and row > 0):
@@ -71,7 +71,7 @@ class board():
             row += 1
             col += 1
         if (count >= 4):
-            return (player)
+            return (true)
         count = 0
         col = col2
         row = row2
@@ -86,8 +86,8 @@ class board():
                 row += 1
                 col -= 1
         if (count >= 4):
-            return (player)
-        return (" ")
+            return (true)
+        return (false)
 
     def check_winner(self):
         if self.player == 1:
