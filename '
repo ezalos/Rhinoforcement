@@ -18,19 +18,18 @@ def one_turn(my_board):
     move = random.randint(0, len(actions) - 1)
     play = actions[move]
     my_board.drop_piece(play)
-    term_visu(my_board.current_board, my_board.last_move)
+    term_visu(my_board.current_board)
     sleep(0.01)
 
 if __name__ == "__main__":
-    nb = 1000
+    nb = 1
     while nb:
         nb -= 1
         my_board = board()
         turn = 0
-        while my_board.check_winner() is not True and turn < 42:
-            #input()
+        while my_board.check_winner() is not True:
             print("\n\n\nTurn :\t", turn)
             one_turn(my_board)
             turn = turn + 1
         print("Simulations left : ", nb, "    ")
-        #sleep(3)
+        sleep(3)

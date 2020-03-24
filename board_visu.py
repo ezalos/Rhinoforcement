@@ -14,10 +14,12 @@ RESET = '\033[0m'
 BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 
-def term_visu(board):
+def term_visu(board, move):
     for cols in range(len(board)):
         for rows in range(len(board[0])):
             spot = board[cols][rows]
+            if cols == move[0] and rows == move[1]:
+                print(UNDERLINE, end="")
             if spot == 'X':
                 print(RED + 'X' + RESET, end="")
             elif spot == 'O':
