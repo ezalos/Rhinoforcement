@@ -10,7 +10,7 @@ class node():
         self.visits = 0
         self.totalReward = 0
         self.children = {}
-        self.actions = []
+        #self.actions = []
         if (self.state == None):
             self.state = state()
 
@@ -52,6 +52,31 @@ class tree():
 class MCTS():
     def __init__(self, tree = tree()):
         self.tree = tree
+        self.current_node = self.tree.root
+
+    def policy(self):
+        pass
+
+    def select(self):
+        # update .daddy in selected child
+        pass
+
+    def expand(self):
+        pass
+        self.tree.expand()
+
+    def simulate(self):
+        pass
+
+    def backpropagate(self):
+        pass
+
+    def explore(self):
+        pass
+
+    def exploit(self):
+        pass
+    
 
 
                 
