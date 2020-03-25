@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:41 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/25 11:41:25 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/25 18:32:24 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,8 +23,11 @@ class state():
         self.board = self.init_board
         self.last_move = [0,0]
         self.turn = 0
+        self.victory = ''
 
     def drop_piece(self, column):
+        if self.victory != ''
+            return "Game Over"
         if self.board[0, column] != " ":
             return "Invalid move"
         else:
@@ -44,7 +47,8 @@ class state():
                 self.board[row-2, column] = "X"
                 self.last_move = [row-2, column]
                 self.player = 0
-    
+        self.check_winner()
+
     def check_line(self, y, x):
         player = ("O" if self.player == 1 else "X")
         row = self.last_move[0]
@@ -71,7 +75,10 @@ class state():
                         break
         #print("Count: ", count)
         if count >= 4:
+            self.victory = player
             return True
+        if self.turn >= 42:
+            self.victory = '.'
         return False
 
     def check_winner(self):
