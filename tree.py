@@ -49,6 +49,6 @@ class MCTS():
 
     def expand(self, node):
         for a in (node.possible_actions()):
-            existing_child = tree.
+            existing_child = turn_table[]
 
 
