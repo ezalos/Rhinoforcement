@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from game import state
 import copy
 
@@ -8,9 +9,10 @@ class node():
         self.state = state
         self.daddy = parent
         self.visits = 0
-        self.totalReward = 0
+        self.total_reward = 0
         self.children = {}
-        #self.actions = []
+        self.actions = []
+        self.is_fully_expanded = 0 #TO UPDATE
         if (self.state == None):
             self.state = state()
 
@@ -21,6 +23,10 @@ class node():
 
     def add_child(self, action, child):
         self.children[action] = child
+
+    def UCB1(self):
+        print("UCB UNSAFE FOR LEAF NODES")
+        return (self.total_reward / self.visits) + math.sqrt(2) * math.sqrt(math.log(self.daddy.visits / self.visits))
 
 
 class tree():
@@ -58,8 +64,17 @@ class MCTS():
         pass
 
     def select(self):
-        # update .daddy in selected child
-        pass
+        '''
+        returns the action leading to the state with the highest UCB score
+        '''
+        best_action = self.current_node.actions[0]
+        best_UCB1 = self.current_node.children.get(best_action).UCB1()
+        new_UCB1 = 0
+        for action in self.current_node.actions :
+            new_UCB1 = self.current_node.children.get(action).UCB1()
+            if (new_UCB1 > best_UCB1):
+                best_UCB1 = new_UCB1
+                best_action = action
 
     def expand(self):
         pass
@@ -76,6 +91,14 @@ class MCTS():
 
     def exploit(self):
         pass
+    
+    def play_action(self, action):
+        pass
+
+    def play(self):
+        while (self.current_node.is_fully_expanded):
+            self.play_action(self.select())
+
     
 
 
