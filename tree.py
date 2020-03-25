@@ -39,9 +39,11 @@ class node():
 class MCTS():
     def __init__(self):
         self.yo = 1
-        self.tree = {}
         root = board()
-        self.tree[root.state] = root
+        self.turn_table = []
+        for i in range(43):
+            self.turn_table.append({})
+        self.turn_table[0][root.state] = root
     
 
 
