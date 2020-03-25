@@ -13,18 +13,19 @@
 #!/usr/bin/env python
 
 import numpy as np
+import copy
 
-class board():
+class state():
     def __init__(self):
         self.init_board = np.zeros([6,7]).astype(str)
         self.init_board[self.init_board == "0.0"] = " "
         self.player = 0
-        self.current_board = self.init_board
+        self.board = self.init_board
         self.last_move = [0,0]
         self.turn = 0
 
     def drop_piece(self, column):
-        if self.current_board[0, column] != " ":
+        if self.board[0, column] != " ":
             return "Invalid move"
         else:
             self.turn += 1
@@ -33,14 +34,14 @@ class board():
                 if row == 6:
                     row += 1
                     break
-                pos = self.current_board[row, column]
+                pos = self.board[row, column]
                 row += 1
             if self.player == 0:
-                self.current_board[row-2, column] = "O"
+                self.board[row-2, column] = "O"
                 self.last_move = [row-2, column]
                 self.player = 1
             elif self.player == 1:
-                self.current_board[row-2, column] = "X"
+                self.board[row-2, column] = "X"
                 self.last_move = [row-2, column]
                 self.player = 0
     
@@ -56,7 +57,7 @@ class board():
             #print (i, end="")
             if 0 <= ((i * x) + row) and ((i * x) + row) < 6:
                 if 0 <= ((i * y) + col) and ((i * y) + col) < 7:
-                    if player == self.current_board[row + (x * i), col + (y * i)]:
+                    if player == self.board[row + (x * i), col + (y * i)]:
                         count += 1
                     else:
                         break
@@ -64,7 +65,7 @@ class board():
             #print (i, end="")
             if 0 <= (row + (i * x)) and ((i * x) + row) < 6:
                 if 0 <= ((i * y) + col) and ((i * y) + col) < 7:
-                    if player == self.current_board[row + (x * i), col + (y * i)]:
+                    if player == self.board[row + (x * i), col + (y * i)]:
                         count += 1
                     else:
                         break
@@ -85,11 +86,18 @@ class board():
         else:
             return False
 
+    def stringify(self):
+        return (self.board.tostring())
     
     def actions(self): # returns all possible moves
         acts = []
         for col in range(7):
-            if self.current_board[0, col] == " ":
+            if self.board[0, col] == " ":
                 acts.append(col)
         return acts
+    
+    def create_child_state(self, action):
+        child_state = copy.deepcopy(self)
+        child_state.drop_piece(action)
+        return (child_state)
 

@@ -14,8 +14,9 @@
 
 from datetime import datetime
 from time import sleep
-from game import board
-from board_visu import view_board, term_visu
+from game import state
+from board_visu import term_visu
+from tree import MCTS
 import random
 
 #from MCTS_c4 import run_MCTS
@@ -32,14 +33,14 @@ def one_turn(my_board):
     move = random.randint(0, len(actions) - 1)
     play = actions[move]
     my_board.drop_piece(play)
-    term_visu(my_board.current_board, my_board.last_move)
+    term_visu(my_board.board, my_board.last_move)
     sleep(0.01)
 
 if __name__ == "__main__":
-    nb = 1000
+    nb = 1
     while nb:
         nb -= 1
-        my_board = board()
+        my_board = state()
         turn = 0
         while my_board.check_winner() is not True and turn < 42:
             #input()
