@@ -12,7 +12,7 @@ class node():
         self.total_reward = 0
         self.children = {}
         self.actions = []
-        self.is_leaf = 1
+        self.is_fully_expanded = 0 #TO UPDATE
         if (self.state == None):
             self.state = state()
 
@@ -96,8 +96,8 @@ class MCTS():
         pass
 
     def play(self):
-        while (not self.current_node.isleaf):
-            play_action(self.select())
+        while (self.current_node.is_fully_expanded):
+            self.play_action(self.select())
 
     
 
