@@ -11,14 +11,13 @@ class node():
         self.visits = 0
         self.total_reward = 0
         self.children = {}
-        self.actions = []
+        self.actions = self.state.actions()
         self.is_fully_expanded = 0 #TO UPDATE
         if (self.state == None):
             self.state = state()
 
     def create_child(self, action):
-        childState = copy.deepcopy(self.state)
-        childState.drop_piece(action)
+        childState = self.state.create_child_state(action) 
         self.children[action] = node(childState, self)
 
     def add_child(self, action, child):
@@ -49,10 +48,19 @@ class tree():
         else:
             parent.children[action] = existing_child
 
-    def expand(self, node):
-        for action in (node.state.actions()):
-            child_state = node.state.create_child_state(action)
-            self.add_child_to_hash_and_parent(child_state, action, node)
+    def add_child_to_parent(self, child_state, action, parent):
+        child = node(child_state, parent)
+        parent.add_child(action, child)
+        self.size += 1
+        return child
+
+    def expand(self, node, action):
+        child = node.create_child(action)
+        self.add_child_to_parent(child, action, node)
+
+    def expand_hash(self, node, action):
+        child_state = node.state.create_child_state(action)
+        self.add_child_to_hash_and_parent(child_state, action, node)
 
 
 class MCTS():
@@ -76,9 +84,8 @@ class MCTS():
                 best_UCB1 = new_UCB1
                 best_action = action
 
-    def expand(self):
-        pass
-        self.tree.expand()
+    def expand(self, action):
+        self.tree.expand(self.current_node, action)
 
     def simulate(self):
         pass
