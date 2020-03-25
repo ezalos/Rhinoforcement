@@ -40,6 +40,8 @@ class MCTS():
     def __init__(self):
         self.yo = 1
         self.tree = {}
+        root = board()
+        self.tree[root.state] = root
     
 
 
