@@ -2,3 +2,4 @@
 .DS_Store
 *.o
 test
+__pycache__
