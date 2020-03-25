@@ -9,15 +9,17 @@ class tree():
 
 # isterminal to be added
 class node():
-    def __init__(self, parent = None):
-        self.state = board()
+    def __init__(self, state = None, parent = None):
+        self.state = state
         self.daddy = parent
         self.visits = 0
         self.totalReward = 0
         self.children = {}
         self.actions = []
+        if (self.state == None):
+            self.state = board()
 
-    def create_child(self, action)
+    def create_child(self, action):
         childState = copy.deepcopy(self.state)
         childState.drop_piece(action)
         self.children[action] = node(childState, self)
@@ -31,7 +33,6 @@ class node():
             if (self.state.current_board[0, i] == " "):
                 out.append(i)
         return (out)
-
 
 
 
