@@ -2,6 +2,8 @@ import numpy as np
 import math
 from game import state
 import copy
+import random
+
 
 # isterminal to be added
 class node():
@@ -17,15 +19,30 @@ class node():
             self.state = state()
 
     def create_child(self, action):
-        childState = self.state.create_child_state(action) 
+        childState = self.state.create_child_state(action)
         self.children[action] = node(childState, self)
+        if len(self.actions) == len(self.children):
+            self.is_fully_expanded = 1
 
     def add_child(self, action, child):
         self.children[action] = child
+        if len(self.actions) == len(self.children):
+            self.is_fully_expanded = 1
 
     def UCB1(self):
         print("UCB UNSAFE FOR LEAF NODES")
         return (self.total_reward / self.visits) + math.sqrt(2) * math.sqrt(math.log(self.daddy.visits / self.visits))
+
+    def unexplored_actions(self):
+        unexplored_moves = []
+        for a in self.actions :
+            if (self.children.get(a) == None): ## need to check it actually returns none when lacking an entry
+                unexplored_moves.append(a)
+        return (unexplored_moves)
+
+    def random_unexplored_action(self):
+        act = self.unexplored_actions()
+        return (act[random.randint(0, len(act) - 1)])
 
 
 class tree():
@@ -84,8 +101,9 @@ class MCTS():
                 best_UCB1 = new_UCB1
                 best_action = action
 
-    def expand(self, action):
-        self.tree.expand(self.current_node, action)
+    def expand(self, node):
+        for act in node.unexplored_actions() :
+            self.tree.expand(self.current_node, action)
 
     def simulate(self):
         pass
@@ -105,6 +123,14 @@ class MCTS():
     def play(self):
         while (self.current_node.is_fully_expanded):
             self.play_action(self.select())
+        
+        action = self.current_node.random_unexplored_action()
+        self.current_node.create_child(action)
+        self.play_action(action)
+
+        self.simulate()
+        self.backpropagate()
+        
 
     
 
