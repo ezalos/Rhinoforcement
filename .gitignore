@@ -3,3 +3,4 @@
 *.o
 test
 __pycache__
+*.pyc
