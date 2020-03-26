@@ -52,5 +52,7 @@ if __name__ == "__main__":
         #sleep(3)
 
     jo = MCTS()
-    for i in range (5000):
+    for i in range (25000):
         jo.play()
+        print(i)
+    jo.play_vs_MCTS()

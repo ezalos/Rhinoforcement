@@ -220,6 +220,7 @@ class MCTS():
         self.current_node.state = state()
         while self.current_node.state.victory is '':
             self.choose_move()
+            print_state(self.current_node.state)
             self.play_action(int(input()))
             print_state(self.current_node.state)
 
