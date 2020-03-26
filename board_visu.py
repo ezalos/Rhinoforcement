@@ -28,6 +28,8 @@ def term_visu(board, move):
         print('\n', end="")
     print('\n', end="")
 
+def print_state(state):
+    term_visu(state.board, state.last_move)
 
 # def view_board(np_data, fmt='{:s}', bkg_colors=['pink', 'pink']):
 #     data = pd.DataFrame(np_data, columns=['0','1','2','3','4','5','6'])

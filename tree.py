@@ -3,6 +3,7 @@ import math
 from game import state
 import copy
 import random
+from board_visu import print_state
 
 
 # isterminal to be added
@@ -32,6 +33,9 @@ class node():
     def UCB1(self):
         return (self.total_reward / self.visits) + math.sqrt(2) * math.sqrt(math.log(self.daddy.visits / self.visits))
 
+    def winrate(self):
+        return (self.total_reward / self.visits)
+    
     def unexplored_actions(self):
         unexplored_moves = []
         for a in self.actions :
@@ -130,6 +134,20 @@ class MCTS():
                 best_action = action
         return (best_action)
 
+    def select_greedy(self):
+        '''
+        returns the action leading to the state with the highest UCB score
+        '''
+        best_action = self.current_node.actions[0]
+        best_winrate = self.current_node.children.get(best_action).winrate()
+        new_winrate = 0
+        for action in self.current_node.actions :
+            new_winrate = self.current_node.children.get(action).winrate()
+            if (new_winrate > best_winrate):
+                best_winrate = new_winrate
+                best_action = action
+        return (best_action)
+
     def selection(self):
         while (self.current_node.is_fully_expanded):
             action = self.select()
@@ -142,7 +160,7 @@ class MCTS():
         if (self.current_node.is_fully_expanded):
             print("youre trying to expand a fully expanded node and this should never print")
         action = self.current_node.random_unexplored_action()
-        self.current_node.create_child(action)
+        self.current_node.create_child_keep_board(action)
         self.play_action(action)
         self.size += 1
 
@@ -180,6 +198,7 @@ class MCTS():
         pass
     
     def play_action(self, action):
+        self.current_node.play_move_keep_board(action)
         self.current_node = self.current_node.children.get(action)
 
     def play(self):
@@ -189,11 +208,20 @@ class MCTS():
         self.expand()
         cacahueta = self.simulate()
         self.backpropagate(self.current_node, cacahueta)
-        print("done")
-        
 
+    def choose_move(self)   :
+        if (self.current_node.is_fully_expanded == 1):
+            self.play_action(self.select_greedy())
+        else:
+            self.expand()
     
-
+    def play_vs_MCTS(self):
+        self.current_node = self.tree.root
+        self.current_node.state = state()
+        while self.current_node.state.victory is '':
+            self.choose_move()
+            self.play_action(int(input()))
+            print_state(self.current_node.state)
 
                 
 

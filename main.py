@@ -16,6 +16,7 @@ from datetime import datetime
 from time import sleep
 from game import state
 from board_visu import term_visu
+from board_visu import print_state
 from tree import MCTS
 import random
 
