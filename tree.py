@@ -142,7 +142,7 @@ class MCTS():
             print("youre trying to expand a fully expanded node and this should never print")
         action = self.current_node.random_unexplored_action()
         print(action)
-        self.current_node.create_child_keep_board(action)
+        self.current_node.create_child(action)
         self.play_action(action)
         self.size += 1
 
@@ -164,13 +164,12 @@ class MCTS():
     def simulate(self):
         return (self.one_game(self.current_node))
 
-
     def backpropagate(self, node, cacahuetas):
         while node.daddy is not None:
-            if node.turn % 2 == 1:
-                node.totalReward += cacahuetas 
+            if node.state.turn % 2 == 1:
+                node.total_reward += cacahuetas 
             else:
-                node.totalReward -= cacahuetas
+                node.total_reward -= cacahuetas
             node.visits += 1
             node = node.daddy
             
@@ -185,10 +184,13 @@ class MCTS():
         self.current_node = self.current_node.children.get(action)
 
     def play(self):
+        self.current_node = self.tree.root
+        self.current_node.state = state()
         self.selection()
         self.expand()
         cacahueta = self.simulate()
         self.backpropagate(self.current_node, cacahueta)
+        print("done")
         
 
     

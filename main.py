@@ -28,7 +28,7 @@ import logging
 
 
 def one_turn(my_board):
-    print("\033[0;0H")
+    #print("\033[0;0H")
     actions = my_board.actions()
     move = random.randint(0, len(actions) - 1)
     play = actions[move]
@@ -51,4 +51,5 @@ if __name__ == "__main__":
         #sleep(3)
 
     jo = MCTS()
-    jo.tree.print_first_floor(jo.tree.root)
+    for i in range (7):
+        jo.play()

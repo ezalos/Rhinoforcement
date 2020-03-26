@@ -26,7 +26,7 @@ class state():
         self.victory = ''
 
     def drop_piece(self, column):
-        if self.victory != ''
+        if self.victory != '' :
             return "Game Over"
         if self.board[0, column] != " ":
             return "Invalid move"
