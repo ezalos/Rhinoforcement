@@ -8,7 +8,7 @@ import random
 # isterminal to be added
 class node():
     def __init__(self, state = state(), parent = None):
-        self.state = state
+        self.state = state # WE CAN REMOVE THE STATE AS THE PATH HOLDS IT !!!
         self.daddy = parent
         self.visits = 0
         self.total_reward = 0
@@ -101,9 +101,17 @@ class MCTS():
                 best_UCB1 = new_UCB1
                 best_action = action
 
-    def expand(self, node):
-        for act in node.unexplored_actions() :
-            self.tree.expand(self.current_node, action)
+    def selection(self):
+        while (self.current_node.is_fully_expanded):
+            self.play_action(self.select())
+
+    def expand(self):
+        if (self.current_node.is_fully_expanded):
+            print("youre trying to expand a fully expanded node and this should never print")
+        action = self.current_node.random_unexplored_action()
+        print(action)
+        self.current_node.create_child(action)
+        self.play_action(action)
 
     def simulate(self):
         pass
@@ -118,16 +126,11 @@ class MCTS():
         pass
     
     def play_action(self, action):
-        pass
+        self.current_node = self.current_node.children.get(action)
 
     def play(self):
-        while (self.current_node.is_fully_expanded):
-            self.play_action(self.select())
-        
-        action = self.current_node.random_unexplored_action()
-        self.current_node.create_child(action)
-        self.play_action(action)
-
+        self.selection()
+        self.expand()
         self.simulate()
         self.backpropagate()
         
