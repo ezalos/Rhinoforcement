@@ -162,8 +162,8 @@ class MCTS():
         return vic  
 
     def simulate(self):
-        cacahuetas = self.one_game(self.current_node)
-        self.backpropagate(self.current_node, cacahuetas)
+        return (self.one_game(self.current_node))
+
 
     def backpropagate(self, node, cacahuetas):
         while node.daddy is not None:
@@ -174,7 +174,6 @@ class MCTS():
             node.visits += 1
             node = node.daddy
             
-
     def explore(self):
         pass
 
@@ -188,8 +187,8 @@ class MCTS():
     def play(self):
         self.selection()
         self.expand()
-        self.simulate()
-        self.backpropagate()
+        cacahueta = self.simulate()
+        self.backpropagate(self.current_node, cacahueta)
         
 
     
