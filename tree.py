@@ -167,7 +167,10 @@ class MCTS():
 
     def backpropagate(self, node, cacahuetas):
         while node.daddy is not None:
-            node.totalReward += cacahuetas
+            if node.turn % 2 == 1:
+                node.totalReward += cacahuetas 
+            else:
+                node.totalReward -= cacahuetas
             node.visits += 1
             node = node.daddy
             
