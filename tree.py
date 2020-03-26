@@ -94,16 +94,17 @@ class MCTS():
             move = random.randint(0, len(actions) - 1)
             play = actions[move]
             board.drop_piece(play)
-        if self.victory == "." :
+        if self.victory == ".":
             vic = 0
-        elif self.victory == "X" :
+        elif self.victory == "X":
             vic = 1
-        elif (-1 if self.victory == "O")
+        elif self.victory == "O":
             vic = -1   
         return vic  
 
     def simulate(self):
-        pass
+        cacahuetas = self.one_game(self.current_node)
+        self.backpropagate(self.current_node, cacahuetas)
 
     def backpropagate(self, node, cacahuetas):
         while node.daddy is not None:
