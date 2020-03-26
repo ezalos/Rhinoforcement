@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/25 11:41:13 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/26 12:28:03 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,8 +25,18 @@ import random
 #from evaluator_c4 import evaluate_nets
 #from argparse import ArgumentParser
 import logging
+import pickle
 
+cache = "cache_MCTS_Tree"
 
+def save_state(s_object, file_name = cache):
+    with open(file_name, 'wb') as my_cache:
+        pickle.dump(s_object, my_cache)
+
+def load_state(file_name = cache):
+    with open(file_name, 'rb') as my_cache:
+        my_obj = pickle.load(my_cache)
+    return my_obj
 
 def one_turn(my_board):
     #print("\033[0;0H")
@@ -38,7 +48,7 @@ def one_turn(my_board):
     sleep(0.01)
 
 if __name__ == "__main__":
-    nb = 1
+    nb = 0
     while nb:
         nb -= 1
         my_board = state()
@@ -51,6 +61,11 @@ if __name__ == "__main__":
         print("Simulations left : ", nb, "    ")
         #sleep(3)
 
-    jo = MCTS()
+    try:
+        jo = load_state()
+    except:
+        jo = MCTS()
     for i in range (5000):
         jo.play()
+    jo.tree.print_first_floor()
+    save_state(jo)
