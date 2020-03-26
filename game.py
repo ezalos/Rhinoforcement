@@ -19,7 +19,7 @@ class state():
     def __init__(self):
         self.init_board = np.zeros([6,7]).astype(str)
         self.init_board[self.init_board == "0.0"] = " "
-        self.player = 0
+        self.player = 1
         self.board = self.init_board
         self.last_move = [0,0]
         self.turn = 0

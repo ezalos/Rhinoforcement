@@ -30,7 +30,6 @@ class node():
             self.is_fully_expanded = 1
 
     def UCB1(self):
-        print("UCB UNSAFE FOR LEAF NODES")
         return (self.total_reward / self.visits) + math.sqrt(2) * math.sqrt(math.log(self.daddy.visits / self.visits))
 
     def unexplored_actions(self):
@@ -59,6 +58,7 @@ class node():
         self.children[action] = node(self.state, self)
         if (len(self.children) == len(self.actions)):
             self.is_fully_expanded = 1
+
 
 class tree():
     def __init__(self):
@@ -132,7 +132,8 @@ class MCTS():
 
     def selection(self):
         while (self.current_node.is_fully_expanded):
-            self.play_action(self.select())
+            action = self.select()
+            self.play_action(action)
 
     def expand(self):
         '''
@@ -141,7 +142,6 @@ class MCTS():
         if (self.current_node.is_fully_expanded):
             print("youre trying to expand a fully expanded node and this should never print")
         action = self.current_node.random_unexplored_action()
-        print(action)
         self.current_node.create_child(action)
         self.play_action(action)
         self.size += 1
@@ -165,14 +165,14 @@ class MCTS():
         return (self.one_game(self.current_node))
 
     def backpropagate(self, node, cacahuetas):
-        while node.daddy is not None:
+        while node is not None:
             if node.state.turn % 2 == 1:
                 node.total_reward += cacahuetas 
             else:
                 node.total_reward -= cacahuetas
             node.visits += 1
             node = node.daddy
-            
+          
     def explore(self):
         pass
 
@@ -180,7 +180,6 @@ class MCTS():
         pass
     
     def play_action(self, action):
-        print("playing move: ", action)
         self.current_node = self.current_node.children.get(action)
 
     def play(self):
