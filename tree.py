@@ -153,11 +153,11 @@ class MCTS():
             move = random.randint(0, len(actions) - 1)
             play = actions[move]
             board.drop_piece(play)
-        if self.victory == ".":
+        if board.victory == ".":
             vic = 0
-        elif self.victory == "X":
+        elif board.victory == "X":
             vic = 1
-        elif self.victory == "O":
+        elif board.victory == "O":
             vic = -1   
         return vic  
 
