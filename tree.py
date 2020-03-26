@@ -87,11 +87,31 @@ class MCTS():
     def expand(self, action):
         self.tree.expand(self.current_node, action)
 
-    def simulate(self):
-        pass
+    def one_game(self, node):
+        board = copy.deepcopy(node.state)
+        while board.victory is '':
+            actions = board.actions()
+            move = random.randint(0, len(actions) - 1)
+            play = actions[move]
+            board.drop_piece(play)
+        if self.victory == ".":
+            vic = 0
+        elif self.victory == "X":
+            vic = 1
+        elif self.victory == "O":
+            vic = -1   
+        return vic  
 
-    def backpropagate(self):
-        pass
+    def simulate(self):
+        cacahuetas = self.one_game(self.current_node)
+        self.backpropagate(self.current_node, cacahuetas)
+
+    def backpropagate(self, node, cacahuetas):
+        while node.daddy is not None:
+            node.totalReward += cacahuetas
+            node.visits += 1
+            node = node.daddy
+            
 
     def explore(self):
         pass
