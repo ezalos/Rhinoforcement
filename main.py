@@ -49,3 +49,6 @@ if __name__ == "__main__":
             turn = turn + 1
         print("Simulations left : ", nb, "    ")
         #sleep(3)
+
+    jo = MCTS()
+    jo.tree.print_first_floor(jo.tree.root)

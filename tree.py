@@ -2,11 +2,13 @@ import numpy as np
 import math
 from game import state
 import copy
+import random
+
 
 # isterminal to be added
 class node():
     def __init__(self, state = state(), parent = None):
-        self.state = state
+        self.state = state # WE CAN REMOVE THE STATE AS THE PATH HOLDS IT !!!
         self.daddy = parent
         self.visits = 0
         self.total_reward = 0
@@ -17,16 +19,46 @@ class node():
             self.state = state()
 
     def create_child(self, action):
-        childState = self.state.create_child_state(action) 
+        childState = self.state.create_child_state(action)
         self.children[action] = node(childState, self)
+        if len(self.actions) == len(self.children):
+            self.is_fully_expanded = 1
 
     def add_child(self, action, child):
         self.children[action] = child
+        if len(self.actions) == len(self.children):
+            self.is_fully_expanded = 1
 
     def UCB1(self):
         print("UCB UNSAFE FOR LEAF NODES")
         return (self.total_reward / self.visits) + math.sqrt(2) * math.sqrt(math.log(self.daddy.visits / self.visits))
 
+    def unexplored_actions(self):
+        unexplored_moves = []
+        for a in self.actions :
+            if (self.children.get(a) == None): ## need to check it actually returns none when lacking an entry
+                unexplored_moves.append(a)
+        return (unexplored_moves)
+
+    def random_unexplored_action(self):
+        act = self.unexplored_actions()
+        return (act[random.randint(0, len(act) - 1)])
+
+    def play_move_keep_board(self, action):
+        existing_child = self.children.get(action)
+        self.state.drop_piece(action)
+        if (existing_child == None):
+            self.children[action] = node(self.state, self)
+            if (len(self.children == len(self.actions))):
+                self.is_fully_expanded = 1
+        else:
+            self.children.get(action).state = self.state
+
+    def create_child_keep_board(self, action):
+        self.state.drop_piece(action)
+        self.children[action] = node(self.state, self)
+        if (len(self.children) == len(self.actions)):
+            self.is_fully_expanded = 1
 
 class tree():
     def __init__(self):
@@ -62,11 +94,24 @@ class tree():
         child_state = node.state.create_child_state(action)
         self.add_child_to_hash_and_parent(child_state, action, node)
 
+    def print_first_floor(self, node = None):
+        if (node == None):
+            node = self.root
+        for a in node.state.actions():
+            print(a)
+            child = node.children.get(a)
+            print(child)
+            if (child != None):
+                print("visits:", node.children.get(a).visits)
+                print("wins:", node.children.get(a).total_reward)
+            print(" ")
+
 
 class MCTS():
     def __init__(self, tree = tree()):
         self.tree = tree
         self.current_node = self.tree.root
+        self.size = 0
 
     def policy(self):
         pass
@@ -83,9 +128,23 @@ class MCTS():
             if (new_UCB1 > best_UCB1):
                 best_UCB1 = new_UCB1
                 best_action = action
+        return (best_action)
 
-    def expand(self, action):
-        self.tree.expand(self.current_node, action)
+    def selection(self):
+        while (self.current_node.is_fully_expanded):
+            self.play_action(self.select())
+
+    def expand(self):
+        '''
+        picks a move among those never played, and plays the move. Creating the corresponding child node.
+        '''
+        if (self.current_node.is_fully_expanded):
+            print("youre trying to expand a fully expanded node and this should never print")
+        action = self.current_node.random_unexplored_action()
+        print(action)
+        self.current_node.create_child_keep_board(action)
+        self.play_action(action)
+        self.size += 1
 
     def one_game(self, node):
         board = copy.deepcopy(node.state)
@@ -120,11 +179,15 @@ class MCTS():
         pass
     
     def play_action(self, action):
-        pass
+        print("playing move: ", action)
+        self.current_node = self.current_node.children.get(action)
 
     def play(self):
-        while (self.current_node.is_fully_expanded):
-            self.play_action(self.select())
+        self.selection()
+        self.expand()
+        self.simulate()
+        self.backpropagate()
+        
 
     
 
