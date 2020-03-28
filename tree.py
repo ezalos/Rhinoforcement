@@ -144,7 +144,7 @@ class MCTS():
         self.current_node = self.tree.root
         self.size = 0
 
-    def policy(self):
+    def default_policy(self):
         pass
 
     def select(self):
@@ -186,12 +186,11 @@ class MCTS():
         picks a move among those never played, and PLAYS THE MOVE.
         Creating the corresponding child node.
         '''
-        if (self.current_node.is_fully_expanded or ):
+        if (self.current_node.is_fully_expanded):
             print("youre trying to expand a fully expanded node and this should never print")
             return 
         action = self.current_node.random_unexplored_action()
-        self.current_node.play_move_keep_board(action)
-        self.current_node = self.current_node.children[action]
+        self.play_action(action)
         self.size += 1
 
     def get_cacahuetas(self, state = self.current_node.state):
@@ -205,7 +204,7 @@ class MCTS():
             return None
         return vic  
     
-    def one_game(self, node = self.current_node, f = lambda x : random.randint(0, len(x) - 1)):
+    def simulate(self, node = self.current_node, f = lambda x : random.randint(0, len(x) - 1)):
         state = copy.deepcopy(node.state) # maybe remove this later
         while state.victory is '':
             actions = state.actions()
@@ -213,9 +212,6 @@ class MCTS():
             play = actions[move]
             state.drop_piece(play)
         return (self.get_cacahuetas(state))
-
-    def simulate(self):
-        return (self.one_game(self.current_node))
 
     def backpropagate(self, node, cacahuetas):
         while node is not None:
@@ -225,14 +221,8 @@ class MCTS():
                 node.total_reward -= cacahuetas
             node.visits += 1
             node = node.daddy
-          
-    def explore(self):
-        pass
-
-    def exploit(self):
-        pass
     
-    def play_action(self, action):
+    def play_action(self, action):        
         self.current_node.play_move_keep_board(action)
         self.current_node = self.current_node.children.get(action)
 
@@ -274,7 +264,7 @@ class MCTS():
                 self.backpropagate(self.current_node, self.get_cacahuetas())
             else:
                 self.expand()
-                self.backpropagate(self.current_node, self.one_game())
+                self.backpropagate(self.current_node, self.simulate())
         self.current_node = initial_node
         self.current_node.state = copy.deepcopy(initial_state)
         return (self.select())
