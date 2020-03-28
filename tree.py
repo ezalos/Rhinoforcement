@@ -75,7 +75,6 @@ class node():
 
 class tree():
     
-    iterations_per_turn = 100
     def __init__(self):
         self.root = node()
         self.size = 1
@@ -136,7 +135,10 @@ class tree():
                 print("Reward : ", node.children.get(a).total_reward)
             print(" ")
 
+
 class MCTS():
+
+    iterations_per_turn = 100
     def __init__(self, tree = tree()):
         self.tree = tree
         self.current_node = self.tree.root
@@ -192,20 +194,25 @@ class MCTS():
         self.current_node = self.current_node.children[action]
         self.size += 1
 
-    def one_game(self, node, f = lambda x : random.randint(0, len(x) - 1)):
-        board = copy.deepcopy(node.state)
-        while board.victory is '':
-            actions = board.actions()
+    def get_cacahuetas(self, state = self.current_node.state):
+        if state.victory == ".":
+            vic = 0
+        elif state.victory == "X":
+            vic = 1
+        elif state.victory == "O":
+            vic = -1
+        else:
+            return None
+        return vic  
+    
+    def one_game(self, node = self.current_node, f = lambda x : random.randint(0, len(x) - 1)):
+        state = copy.deepcopy(node.state) # maybe remove this later
+        while state.victory is '':
+            actions = state.actions()
             move = f(actions)
             play = actions[move]
-            board.drop_piece(play)
-        if board.victory == ".":
-            vic = 0
-        elif board.victory == "X":
-            vic = 1
-        elif board.victory == "O":
-            vic = -1
-        return vic  
+            state.drop_piece(play)
+        return (self.get_cacahuetas(state))
 
     def simulate(self):
         return (self.one_game(self.current_node))
@@ -254,8 +261,7 @@ class MCTS():
             self.play_action(int(input()))
             print_state(self.current_node.state)
 
-
-    def self_play(self):
+    def iterate_then_choose_move(self):
         initial_node = self.current_node
         initial_state = copy.deepcopy(self.current_node.state)
         for i in range(self.iterations_per_turn):
@@ -264,6 +270,18 @@ class MCTS():
             while (self.current_node.is_fully_expanded):
                 action = self.select()
                 self.play_action(action)
-                if (self.current_node.state.check_winner):
-                    self.backpropagate(self.current_node,)
-                
+            if (self.current_node.state.victory != ''): #no fuckin clue how string comparisons work carefull untested
+                self.backpropagate(self.current_node, self.get_cacahuetas())
+            else:
+                self.expand()
+                self.backpropagate(self.current_node, self.one_game())
+        self.current_node = initial_node
+        self.current_node.state = copy.deepcopy(initial_state)
+        return (self.select())
+
+    def self_play(self):
+        while (self.current_node.state.victory == ''):
+            action = self.iterate_then_choose_move()
+            self.play_action(action)
+        self.backpropagate(self.current_node, self.get_cacahuetas()) # maybe double backprop
+        
