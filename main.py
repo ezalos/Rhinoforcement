@@ -14,10 +14,10 @@
 
 from datetime import datetime
 from time import sleep
-from game import state
+from state import state
 from board_visu import term_visu
 from board_visu import print_state
-from tree import MCTS
+from MCTS import MCTS
 import random
 import copy
 
