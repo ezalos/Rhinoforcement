@@ -118,9 +118,9 @@ class MCTS():
             self.choose_move()
             #self.play_action(int(input()))
             print("AI play")
-            print_state(self.current_node.state)
+            self.current_node.state.display()
             self.play_action(int(input()))
-            print_state(self.current_node.state)
+            self.current_node.state.display()
 
     def iterate_then_choose_move(self):
         initial_node = self.current_node

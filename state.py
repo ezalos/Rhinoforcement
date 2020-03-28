@@ -37,28 +37,41 @@ class state():
         self.board[row, column] = self.player
         self.last_move = [row, column]
         self.turn += 1
-        self.player = "X" if self.player == "O" else "O"
         self.check_winner()
+        self.player = "X" if self.player == "O" else "O"
 
     def check_line(self, y, x):
         player = self.player
         row = self.last_move[0]
         col = self.last_move[1]
+        if 0:
+            if y == 1 and x == 0:
+                print("|")
+            elif y == 0 and x == 1:
+                print("_")
+            elif y == 1 and x == 1:
+                print("/")
+            elif y == -1 and x == 1:
+                print("\\")
         count = 0
+        found = 0
         for i in range(0, 4):
             if 0 <= ((i * x) + row) and ((i * x) + row) < MAX_ROWS:
                 if 0 <= ((i * y) + col) and ((i * y) + col) < MAX_COLS:
                     if player == self.board[row + (x * i), col + (y * i)]:
                         count += 1
-                    else:
+                        found = 1
+                    elif found:
                         break
         for i in range(-1, -4, -1):
             if 0 <= (row + (i * x)) and ((i * x) + row) < MAX_ROWS:
                 if 0 <= ((i * y) + col) and ((i * y) + col) < MAX_COLS:
                     if player == self.board[row + (x * i), col + (y * i)]:
                         count += 1
-                    else:
+                    elif found:
                         break
+        if 0:
+            print("Count : ", count)
         if count >= 4:
             self.victory = player
             return True
@@ -95,12 +108,12 @@ class state():
         return (child_state)
 
     def display(self):
-        board = self
+        board = self.board
         move = self.last_move
-        for cols in range(MAX_COLS):
-            for rows in range(MAX_ROWS):
-                spot = board[cols][rows]
-                if   cols == move[0] and rows == move[1]:
+        for rows in range(MAX_ROWS):
+            for cols in range(MAX_COLS):
+                spot = board[rows, cols]
+                if   cols == move[1] and rows == move[0]:
                    print(UNDERLINE, end="")
                 if spot == 'X':
                     print(RED + 'X' + RESET, end="")
