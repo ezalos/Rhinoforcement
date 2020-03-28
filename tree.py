@@ -222,7 +222,9 @@ class MCTS():
         self.play_action(action)
         self.size += 1
 
-    def get_cacahuetas(self, state = self.current_node.state):
+    def get_cacahuetas(self, state = None):
+        if state == None:
+            state = self.current_node.state
         if state.victory == ".":
             vic = 0
         elif state.victory == "X":
@@ -233,7 +235,9 @@ class MCTS():
             return None
         return vic  
     
-    def simulate(self, node = self.current_node, f = lambda x : random.randint(0, len(x) - 1)):
+    def simulate(self, node = None, f = lambda x : random.randint(0, len(x) - 1)):
+        if node == None:
+            node = self.current_node
         state = copy.deepcopy(node.state) # maybe remove this later
         while state.victory is '':
             actions = state.actions()
