@@ -56,10 +56,12 @@ class tree():
             node = self.root
         best_UCB1 = -100000000000
         for action in node.actions :
-            new_UCB1 = node.children.get(action).UCB1()
-            if (new_UCB1 > best_UCB1):
-                best_UCB1 = new_UCB1
-                best_action = action
+            danger = node.children.get(action)
+            if danger != None:
+                new_UCB1 = danger.UCB1()
+                if (new_UCB1 > best_UCB1):
+                    best_UCB1 = new_UCB1
+                    best_action = action
         for act in node.state.actions():
             child = node.children[act]
             if deepness < 2 or act == node.state.actions()[0]:
