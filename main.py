@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/28 16:34:08 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/28 16:43:02 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -97,8 +97,8 @@ if __name__ == "__main__":
         jo = load_state()
     except:
         jo = MCTS()
-    #for i in ft_progress(range(5000)):
-    #    jo.play()
+    for i in ft_progress(range(5000)):
+        jo.play()
     jo.display()
     save_state(jo)
     jo.play_vs_MCTS()
