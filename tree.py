@@ -6,9 +6,15 @@ import copy
 import random
 from board_visu import print_state
 
-
 # isterminal to be added
-
+PURPLE = '\033[95m'
+BLUE = '\033[94m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+RESET = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
 
 class tree():
     
@@ -45,27 +51,7 @@ class tree():
         child_state = node.state.create_child_state(action)
         self.add_child_to_hash_and_parent(child_state, action, node)
 
-    def print_first_floor(self, node = None):
-        if (node == None):
-            node = self.root
-        for a in node.state.actions():
-            print(a)
-            child = node.children.get(a)
-            print(child)
-            if (child != None):
-                print("visits:", node.children.get(a).visits)
-                print("wins:", node.children.get(a).total_reward)
-            print(" ")
-
     def print_n_floor(self, node=None, limit=1, deepness=0):
-        PURPLE = '\033[95m'
-        BLUE = '\033[94m'
-        GREEN = '\033[92m'
-        YELLOW = '\033[93m'
-        RED = '\033[91m'
-        RESET = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
         max = len(str(self.root.visits))
         if (node == None):
             node = self.root
