@@ -53,11 +53,15 @@ class node():
         return (act[random.randint(0, len(act) - 1)])
 
     def play_move_keep_board(self, action):
+        '''
+        will do the action and pass a pointer/reference to the board to the corresponding
+        child node. The child node will be created if necessary
+        '''
         existing_child = self.children.get(action)
         self.state.drop_piece(action)
         if (existing_child == None):
             self.children[action] = node(self.state, self)
-            if (len(self.children == len(self.actions))):
+            if (len(self.children) == len(self.actions)):
                 self.is_fully_expanded = 1
         else:
             self.children.get(action).state = self.state
@@ -70,6 +74,7 @@ class node():
 
 
 class tree():
+    
     def __init__(self):
         self.root = node()
         self.size = 1
@@ -159,13 +164,16 @@ class tree():
             print("")
 
 
+
 class MCTS():
+
+    iterations_per_turn = 100
     def __init__(self, tree = tree()):
         self.tree = tree
         self.current_node = self.tree.root
         self.size = 0
 
-    def policy(self):
+    def default_policy(self):
         pass
 
     def select(self):
@@ -177,6 +185,7 @@ class MCTS():
         new_UCB1 = 0
         for action in self.current_node.actions :
             new_UCB1 = self.current_node.children.get(action).UCB1()
+            #print("action: ", action, "best_action: ", best_action, "UCB: ", new_UCB1, "best: ", best_UCB1)
             if (new_UCB1 > best_UCB1):
                 best_UCB1 = new_UCB1
                 best_action = action
@@ -203,32 +212,35 @@ class MCTS():
 
     def expand(self):
         '''
-        picks a move among those never played, and plays the move. Creating the corresponding child node.
+        picks a move among those never played, and PLAYS THE MOVE.
+        Creating the corresponding child node.
         '''
         if (self.current_node.is_fully_expanded):
             print("youre trying to expand a fully expanded node and this should never print")
+            return 
         action = self.current_node.random_unexplored_action()
-        self.current_node.create_child_keep_board(action)
         self.play_action(action)
         self.size += 1
 
-    def one_game(self, node, f = lambda x : random.randint(0, len(x) - 1)):
-        board = copy.deepcopy(node.state)
-        while board.victory is '':
-            actions = board.actions()
+    def get_cacahuetas(self, state = self.current_node.state):
+        if state.victory == ".":
+            vic = 0
+        elif state.victory == "X":
+            vic = 1
+        elif state.victory == "O":
+            vic = -1
+        else:
+            return None
+        return vic  
+    
+    def simulate(self, node = self.current_node, f = lambda x : random.randint(0, len(x) - 1)):
+        state = copy.deepcopy(node.state) # maybe remove this later
+        while state.victory is '':
+            actions = state.actions()
             move = f(actions)
             play = actions[move]
-            board.drop_piece(play)
-        if board.victory == ".":
-            vic = 0
-        elif board.victory == "X":
-            vic = 1
-        elif board.victory == "O":
-            vic = -1   
-        return vic  
-
-    def simulate(self):
-        return (self.one_game(self.current_node))
+            state.drop_piece(play)
+        return (self.get_cacahuetas(state))
 
     def backpropagate(self, node, cacahuetas):
         while node is not None:
@@ -238,14 +250,8 @@ class MCTS():
                 node.total_reward -= cacahuetas
             node.visits += 1
             node = node.daddy
-          
-    def explore(self):
-        pass
-
-    def exploit(self):
-        pass
     
-    def play_action(self, action):
+    def play_action(self, action):        
         self.current_node.play_move_keep_board(action)
         self.current_node = self.current_node.children.get(action)
 
@@ -268,10 +274,33 @@ class MCTS():
         self.current_node.state = state()
         while self.current_node.state.victory is '':
             self.choose_move()
+            #self.play_action(int(input()))
+            print("AI play")
             print_state(self.current_node.state)
             self.play_action(int(input()))
             print_state(self.current_node.state)
 
-                
+    def iterate_then_choose_move(self):
+        initial_node = self.current_node
+        initial_state = copy.deepcopy(self.current_node.state)
+        for i in range(self.iterations_per_turn):
+            self.current_node = initial_node
+            self.current_node.state = copy.deepcopy(initial_state)
+            while (self.current_node.is_fully_expanded):
+                action = self.select()
+                self.play_action(action)
+            if (self.current_node.state.victory != ''): #no fuckin clue how string comparisons work carefull untested
+                self.backpropagate(self.current_node, self.get_cacahuetas())
+            else:
+                self.expand()
+                self.backpropagate(self.current_node, self.simulate())
+        self.current_node = initial_node
+        self.current_node.state = copy.deepcopy(initial_state)
+        return (self.select())
 
-
+    def self_play(self):
+        while (self.current_node.state.victory == ''):
+            action = self.iterate_then_choose_move()
+            self.play_action(action)
+        self.backpropagate(self.current_node, self.get_cacahuetas()) # maybe double backprop
+        
