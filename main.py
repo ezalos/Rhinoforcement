@@ -31,8 +31,6 @@ from time import sleep
 import time
 
 start_time = time.time()
-listy = range(1000)
-ret = 0
 
 def truncate(f, n):
     '''Truncates/pads a float f to n decimal places without rounding'''
@@ -43,9 +41,11 @@ def truncate(f, n):
     return '.'.join([i, (d+'0'*n)[:n]])
 
 def ft_progress(listy):
-	total = len(listy);
-	unit = int(total / 20);
+	total = len(listy)
+	unit = int(total / 20)
 	for i in listy:
+#       if (i == 0):
+#            start_time = time.time()
 		elapsed_time = ((time.time()) - (start_time))
 		eta = ((elapsed_time) * (total - i) / (i + 1))
 		print("ETA: ", ' ' if (eta // 10) < 1 else '', str(truncate(eta, 2)) + "s ",
@@ -97,9 +97,8 @@ if __name__ == "__main__":
         jo = load_state()
     except:
         jo = MCTS()
-    #for i in ft_progress(range(5000)):
-    #    jo.play()
-    jo.display()
+    for i in ft_progress(range(1000000)):
+        jo.play()
     save_state(jo)
     jo.play_vs_MCTS()
     

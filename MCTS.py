@@ -5,7 +5,7 @@ import random
 
 class MCTS():
 
-    iterations_per_turn = 100
+    iterations_per_turn = 10
     def __init__(self, tree = tree()):
         self.tree = tree
         self.current_node = self.tree.root
@@ -109,18 +109,19 @@ class MCTS():
         if (self.current_node.is_fully_expanded == 1):
             self.play_action(self.select_greedy())
         else:
-            self.expand()
+            self.expand() #stupid
     
     def play_vs_MCTS(self):
         self.current_node = self.tree.root
         self.current_node.state = state()
         while self.current_node.state.victory is '':
-            self.choose_move()
+            self.choose_move() #stupid
             #self.play_action(int(input()))
             print("AI play")
             self.current_node.state.display()
-            self.play_action(int(input()))
-            self.current_node.state.display()
+            if self.current_node.state.victory is '':
+                self.play_action(int(input()))
+                self.current_node.state.display()
 
     def iterate_then_choose_move(self):
         initial_node = self.current_node
@@ -141,6 +142,8 @@ class MCTS():
         return (self.select())
 
     def self_play(self):
+        self.current_node = self.tree.root
+        self.current_node.state = state()
         while (self.current_node.state.victory == ''):
             action = self.iterate_then_choose_move()
             self.play_action(action)
