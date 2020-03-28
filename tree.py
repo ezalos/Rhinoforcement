@@ -150,7 +150,7 @@ class tree():
                 if deepness < 2:
                     print("")
                 elif act != node.state.actions()[-1]:
-                    print(" |  ", end="")
+                    print(" | ", end="")
                 if deepness < limit:
                     self.print_n_floor(child, limit, deepness + 1)
             else:

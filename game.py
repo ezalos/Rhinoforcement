@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:41 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/25 18:32:24 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/28 14:35:10 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,11 +15,14 @@
 import numpy as np
 import copy
 
+MAX_ROWS = 6
+MAX_COLS = 7
+
 class state():
     def __init__(self):
-        self.init_board = np.zeros([6,7]).astype(str)
+        self.init_board = np.zeros([MAX_ROWS, MAX_COLS]).astype(str)
         self.init_board[self.init_board == "0.0"] = " "
-        self.player = 1
+        self.player = "X"
         self.board = self.init_board
         self.last_move = [0,0]
         self.turn = 0
@@ -28,61 +31,48 @@ class state():
     def drop_piece(self, column):
         if self.victory != '' :
             return "Game Over"
-        if self.board[0, column] != " ":
+        elif self.board[0, column] != " ":
             return "Invalid move"
         else:
-            self.turn += 1
-            row = 0; pos = " "
-            while (pos == " "):
-                if row == 6:
-                    row += 1
-                    break
-                pos = self.board[row, column]
-                row += 1
-            if self.player == 0:
-                self.board[row-2, column] = "O"
-                self.last_move = [row-2, column]
-                self.player = 1
-            elif self.player == 1:
-                self.board[row-2, column] = "X"
-                self.last_move = [row-2, column]
-                self.player = 0
+            row = MAX_ROWS - 1
+            while " " != self.board[row, column]:
+                row -= 1
+        self.board[row, column] = self.player
+        self.last_move = [row, column]
+        self.turn += 1
+        self.player = "X" if self.player == "O" else "O"
         self.check_winner()
 
     def check_line(self, y, x):
-        player = ("O" if self.player == 1 else "X")
+        player = self.player
         row = self.last_move[0]
         col = self.last_move[1]
-        #print("Where : ", self.last_move)
-        #print(y, x)
         count = 0
         
         for i in range(0, 4):
-            #print (i, end="")
-            if 0 <= ((i * x) + row) and ((i * x) + row) < 6:
-                if 0 <= ((i * y) + col) and ((i * y) + col) < 7:
+            if 0 <= ((i * x) + row) and ((i * x) + row) < MAX_ROWS:
+                if 0 <= ((i * y) + col) and ((i * y) + col) < MAX_COLS:
                     if player == self.board[row + (x * i), col + (y * i)]:
                         count += 1
                     else:
                         break
         for i in range(-1, -4, -1):
-            #print (i, end="")
-            if 0 <= (row + (i * x)) and ((i * x) + row) < 6:
-                if 0 <= ((i * y) + col) and ((i * y) + col) < 7:
+            if 0 <= (row + (i * x)) and ((i * x) + row) < MAX_ROWS:
+                if 0 <= ((i * y) + col) and ((i * y) + col) < MAX_COLS:
                     if player == self.board[row + (x * i), col + (y * i)]:
                         count += 1
                     else:
                         break
-        #print("Count: ", count)
         if count >= 4:
             self.victory = player
             return True
-        if self.turn >= 42:
-            self.victory = '.'
         return False
 
     def check_winner(self):
-        if self.check_line(1, 0):
+        if self.turn >= 42:
+            self.victory = '.'
+            return False
+        elif self.check_line(1, 0):
             return True
         elif self.check_line(0, 1):
             return True
@@ -98,7 +88,7 @@ class state():
     
     def actions(self): # returns all possible moves
         acts = []
-        for col in range(7):
+        for col in range(MAX_COLS):
             if self.board[0, col] == " ":
                 acts.append(col)
         return acts
