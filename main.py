@@ -19,6 +19,7 @@ from board_visu import term_visu
 from board_visu import print_state
 from tree import MCTS
 import random
+import copy
 
 #from MCTS_c4 import run_MCTS
 #from train_c4 import train_connectnet
@@ -98,5 +99,6 @@ if __name__ == "__main__":
         jo = MCTS()
     for i in ft_progress(range(5000)):
         jo.play()
-    jo.tree.print_first_floor()
     save_state(jo)
+    #jo.play_vs_MCTS()
+    
