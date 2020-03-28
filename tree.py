@@ -115,6 +115,20 @@ class tree():
                 print("wins:", node.children.get(a).total_reward)
             print(" ")
 
+    def print_indent(nb):
+        print("    " * nb, end="")
+
+    def print_n_floor(self, node=None, deepness=3):
+        if (node == None):
+            node = self.root
+        for a in node.state.actions():
+            print_indent()
+            print("Action : ", a)
+            child = node.children.get(a)
+            if (child != None):
+                print("Visits : ", node.children.get(a).visits)
+                print("Reward : ", node.children.get(a).total_reward)
+            print(" ")
 
 class MCTS():
     def __init__(self, tree = tree()):
@@ -169,11 +183,11 @@ class MCTS():
         self.play_action(action)
         self.size += 1
 
-    def one_game(self, node):
+    def one_game(self, node, f = lambda x : random.randint(0, len(x) - 1)):
         board = copy.deepcopy(node.state)
         while board.victory is '':
             actions = board.actions()
-            move = random.randint(0, len(actions) - 1)
+            move = f(actions)
             play = actions[move]
             board.drop_piece(play)
         if board.victory == ".":
