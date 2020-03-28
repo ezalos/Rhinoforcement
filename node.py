@@ -2,6 +2,15 @@ from state import state
 import random
 import math
 
+PURPLE = '\033[95m'
+BLUE = '\033[94m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+RESET = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+
 class node():
     def __init__(self, state = state(), parent = None):
         self.state = state # WE CAN REMOVE THE STATE AS THE PATH HOLDS IT !!!
@@ -66,3 +75,9 @@ class node():
         self.children[action] = node(self.state, self)
         if (len(self.children) == len(self.actions)):
             self.is_fully_expanded = 1
+                
+    def display(self, max_nb_size = 5):
+        print(" " * (max_nb_size - len(str(self.total_reward))), end="")
+        print(self.total_reward, "/", self.visits, end="")
+        print(" " * (max_nb_size - len(str(self.visits))), end="")
+        print("=", str(self.UCB1())[:4], RESET, end="")

@@ -4,7 +4,6 @@ from state import state
 from node import node
 import copy
 import random
-from board_visu import print_state
 
 # isterminal to be added
 PURPLE = '\033[95m'
@@ -73,8 +72,7 @@ class tree():
                 print(RED, end="")
             print(act, "-->", end="")
             if (child != None):
-                print(" " * (max - len(str(child.total_reward))), child.total_reward, "/", child.visits, " " * (max - len(str(child.visits))), end="")
-                print("=", str(child.UCB1())[:4], RESET, end="")
+                child.display(max)
                 if deepness < 2:
                     print("")
                 elif act != node.state.actions()[-1]:
@@ -86,3 +84,5 @@ class tree():
         if deepness >= 2:
             print("")
 
+    def display(self):
+        self.print_n_floor()

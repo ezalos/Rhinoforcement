@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    game.py                                            :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2020/03/25 11:40:41 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/28 14:35:10 by ezalos           ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 #!/usr/bin/env python
 
 import numpy as np
@@ -17,6 +5,15 @@ import copy
 
 MAX_ROWS = 6
 MAX_COLS = 7
+
+PURPLE = '\033[95m'
+BLUE = '\033[94m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RED = '\033[91m'
+RESET = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
 
 class state():
     def __init__(self):
@@ -48,7 +45,6 @@ class state():
         row = self.last_move[0]
         col = self.last_move[1]
         count = 0
-        
         for i in range(0, 4):
             if 0 <= ((i * x) + row) and ((i * x) + row) < MAX_ROWS:
                 if 0 <= ((i * y) + col) and ((i * y) + col) < MAX_COLS:
@@ -97,4 +93,24 @@ class state():
         child_state = copy.deepcopy(self)
         child_state.drop_piece(action)
         return (child_state)
+
+    def display(self):
+        board = self
+        move = self.last_move
+        for cols in range(MAX_COLS):
+            for rows in range(MAX_ROWS):
+                spot = board[cols][rows]
+                if   cols == move[0] and rows == move[1]:
+                   print(UNDERLINE, end="")
+                if spot == 'X':
+                    print(RED + 'X' + RESET, end="")
+                elif spot == 'O':
+                    print(BLUE + 'O' + RESET, end="")
+                else:
+                    print('.', end="")
+                print(' ', end="")
+            print('\n', end="")
+        print('\n', end="")
+
+
 

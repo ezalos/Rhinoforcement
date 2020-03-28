@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/28 15:19:08 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/28 16:19:30 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,8 +15,6 @@
 from datetime import datetime
 from time import sleep
 from state import state
-from board_visu import term_visu
-from board_visu import print_state
 from MCTS import MCTS
 import random
 import copy
@@ -78,7 +76,7 @@ def one_turn(my_board):
     move = random.randint(0, len(actions) - 1)
     play = actions[move]
     my_board.drop_piece(play)
-    term_visu(my_board.board, my_board.last_move)
+    my_board.display()
     sleep(0.01)
 
 if __name__ == "__main__":
@@ -101,7 +99,7 @@ if __name__ == "__main__":
         jo = MCTS()
     for i in ft_progress(range(5000)):
         jo.play()
-    jo.tree.print_n_floor()
+    jo.display()
     save_state(jo)
     #jo.play_vs_MCTS()
     

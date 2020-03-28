@@ -145,4 +145,7 @@ class MCTS():
             action = self.iterate_then_choose_move()
             self.play_action(action)
         self.backpropagate(self.current_node, self.get_cacahuetas()) # maybe double backprop
-        
+
+    def display(self):
+        print("Size MCTS = ", self.size)
+        self.tree.display()
