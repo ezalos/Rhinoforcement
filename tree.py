@@ -120,7 +120,7 @@ class tree():
                 print("wins:", node.children.get(a).total_reward)
             print(" ")
 
-    def print_n_floor(self, node=None, limit=2, deepness=0):
+    def print_n_floor(self, node=None, limit=1, deepness=0):
         PURPLE = '\033[95m'
         BLUE = '\033[94m'
         GREEN = '\033[92m'

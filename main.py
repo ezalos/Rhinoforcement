@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/28 13:00:28 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/28 15:19:08 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -51,9 +51,9 @@ def ft_progress(listy):
 		elapsed_time = ((time.time()) - (start_time))
 		eta = ((elapsed_time) * (total - i) / (i + 1))
 		print("ETA: ", ' ' if (eta // 10) < 1 else '', str(truncate(eta, 2)) + "s ",
-		"[ " if i < (total // 10) else "[", str(((i * 100)// total)) + '%' + ']' +
+		"[ " if i < (total // 10) else "[", str((((i + 1) * 100)// total)) + '%' + ']' +
 		'[' + (i // unit) * '=' + '>' + ((total - i - 1) // unit) * ' ' + '] ' +
-		str(i) + '/' + str(total) +
+		str(i + 1) + '/' + str(total) +
 		" | elapsed time " + str(truncate(elapsed_time, 2)) + "s  ",
 		end="\r")
 		yield i
@@ -64,10 +64,12 @@ cache = "cache_MCTS_Tree"
 def save_state(s_object, file_name = cache):
     with open(file_name, 'wb') as my_cache:
         pickle.dump(s_object, my_cache)
+        print("Save of cache successful, tree size = ", s_object.size)
 
 def load_state(file_name = cache):
     with open(file_name, 'rb') as my_cache:
         my_obj = pickle.load(my_cache)
+    print("Load of cache successful, tree size = ", my_obj.size)
     return my_obj
 
 def one_turn(my_board):
