@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/28 12:12:11 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/28 13:00:28 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -99,6 +99,7 @@ if __name__ == "__main__":
         jo = MCTS()
     for i in ft_progress(range(5000)):
         jo.play()
+    jo.tree.print_n_floor()
     save_state(jo)
     #jo.play_vs_MCTS()
     

@@ -120,20 +120,49 @@ class tree():
                 print("wins:", node.children.get(a).total_reward)
             print(" ")
 
-    def print_indent(self, nb):
-        print("    " * nb, end="")
-
-    def print_n_floor(self, node=None, deepness=3):
+    def print_n_floor(self, node=None, limit=2, deepness=0):
+        PURPLE = '\033[95m'
+        BLUE = '\033[94m'
+        GREEN = '\033[92m'
+        YELLOW = '\033[93m'
+        RED = '\033[91m'
+        RESET = '\033[0m'
+        BOLD = '\033[1m'
+        UNDERLINE = '\033[4m'
+        max = len(str(self.root.visits))
         if (node == None):
             node = self.root
-        for a in node.state.actions():
-            print_indent()
-            print("Action : ", a)
-            child = node.children.get(a)
+        best_UCB1 = -100000000000
+        for action in node.actions :
+            new_UCB1 = node.children.get(action).UCB1()
+            if (new_UCB1 > best_UCB1):
+                best_UCB1 = new_UCB1
+                best_action = action
+        for act in node.state.actions():
+            child = node.children[act]
+            if deepness < 2 or act == node.state.actions()[0]:
+                print("    " * deepness, end="")
+            if act == best_action:
+                print(UNDERLINE, end="")
+            if deepness % 2 == 1:
+                print(PURPLE, end="")
+            else:
+                print(RED, end="")
+            print(act, "-->", end="")
             if (child != None):
-                print("Visits : ", node.children.get(a).visits)
-                print("Reward : ", node.children.get(a).total_reward)
-            print(" ")
+                print(" " * (max - len(str(child.total_reward))), child.total_reward, "/", child.visits, " " * (max - len(str(child.visits))), end="")
+                print("=", str(child.UCB1())[:4], RESET, end="")
+                if deepness < 2:
+                    print("")
+                elif act != node.state.actions()[-1]:
+                    print(" | ", end="")
+                if deepness < limit:
+                    self.print_n_floor(child, limit, deepness + 1)
+            else:
+                print("  NONE", RESET)
+        if deepness >= 2:
+            print("")
+
 
 
 class MCTS():
