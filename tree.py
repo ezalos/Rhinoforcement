@@ -31,7 +31,12 @@ class node():
             self.is_fully_expanded = 1
 
     def UCB1(self):
-        return (self.total_reward / self.visits) + math.sqrt(2) * math.sqrt(math.log(self.daddy.visits / self.visits))
+        sqrt_log_of_visits = math.sqrt(math.log(self.daddy.visits / self.visits))
+        reward_visits = (self.total_reward / self.visits)
+        #c_explo = math.sqrt(2)
+        c_explo = 2
+        result = reward_visits + c_explo * sqrt_log_of_visits
+        return result
 
     def winrate(self):
         return (self.total_reward / self.visits)
