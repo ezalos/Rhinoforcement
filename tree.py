@@ -115,20 +115,34 @@ class tree():
                 print("wins:", node.children.get(a).total_reward)
             print(" ")
 
-    def print_indent(nb):
-        print("    " * nb, end="")
-
-    def print_n_floor(self, node=None, deepness=3):
+    def print_n_floor(self, node=None, limit=1, deepness=0):
+        PURPLE = '\033[95m'
+        BLUE = '\033[94m'
+        GREEN = '\033[92m'
+        YELLOW = '\033[93m'
+        RED = '\033[91m'
+        RESET = '\033[0m'
+        BOLD = '\033[1m'
+        UNDERLINE = '\033[4m'
+        max = len(str(self.root.visits))
         if (node == None):
             node = self.root
-        for a in node.state.actions():
-            print_indent()
-            print("Action : ", a)
-            child = node.children.get(a)
+        for act in node.state.actions():
+            child = node.children[act]
+            print("    " * deepness, end="")
+            if deepness % 2 == 1:
+                print(PURPLE, end="")
+            else:
+                print(RED, end="")
+            print(act, "-->", end="")
             if (child != None):
-                print("Visits : ", node.children.get(a).visits)
-                print("Reward : ", node.children.get(a).total_reward)
-            print(" ")
+                print(YELLOW, " " * (max - len(str(child.total_reward))), child.total_reward, "/", child.visits, " " * (max - len(str(child.visits))), end="")
+                print(GREEN, "=", str(child.UCB1())[:4], RESET)
+                if deepness < limit:
+                    self.print_n_floor(child, limit, deepness + 1)
+            else:
+                print("  NONE", RESET)
+
 
 class MCTS():
     def __init__(self, tree = tree()):
