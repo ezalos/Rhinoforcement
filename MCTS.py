@@ -70,7 +70,6 @@ class MCTS():
         while (self.current_node.is_fully_expanded and self.current_node.visits != 0 and self.current_node.state.victory == ''):
             self.play_action(self.select())
 
-
     def expand(self):
         '''
             create all children for self.current_node
@@ -122,22 +121,20 @@ class MCTS():
         '''
             runs many games from current_node, chooses a move the plays it.
         '''
-#        print("PLAY ONE TURN")
-        initial_state = self.current_node.state
+        initial_state = copy.deepcopy(self.current_node.state)
         initial_node = self.current_node
         for i in range(iterations):                                            # HERE WE DEFINE ITERATIONS PER TURN !!!!
             self.current_node = initial_node
-            self.current_node.state = copy.deepcopy(initial_state)      # use state.copy here performance vs storage ?
+            self.current_node.state.copy(initial_state)
             self.play()
         self.current_node = initial_node
-        self.current_node.state = initial_state
+        self.current_node.state.copy(initial_state)
         self.play_action(self.select_most_visits())
 
     def self_play_one_game(self):
         '''
             resets current node and state then plays a game vs itself
         '''
-#        print("PLAY ONE GAME")
         self.current_node = self.tree.root
         self.current_node.state.reset()
         while (self.current_node.state.victory is ''):
@@ -148,7 +145,6 @@ class MCTS():
         self.current_node.state.reset()
         while self.current_node.state.victory is '':
             self.self_play_one_move(2000)
-#            print("AI play")
             self.current_node.state.display()
             if self.current_node.state.victory is '':
                 self.play_action(int(input()))
@@ -183,27 +179,3 @@ class MCTS():
     def display(self):
         print("Size MCTS = ", self.size)
         self.tree.display()
-
-
-#    def get_cacahuetas(self, state = None):
-#        if state == None:
-#            state = self.current_node.state
-#        if state.victory == ".":
-#            vic = 0
-#        elif state.victory == "X":
-#            vic = 1
-#        elif state.victory == "O":
-#            vic = -1
-#        else:
-#            return None
-#        return vic  
-
-
-#    def play(self):
-#        self.current_node = self.tree.root
-#        self.current_node.state = state()
-#        self.selection()
-#        self.expand()
-#        cacahueta = self.simulate()
-#        self.backpropagate(self.current_node, cacahueta)
- 

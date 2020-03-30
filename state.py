@@ -159,6 +159,9 @@ class state():
                     print('.' + RESET, end="")
                 print(' ', end="")
             print('\n', end="")
+        print("0 1 2 3 4 5 6")
+        if (self.victory != ''):
+            print("Victory: ", self.victory)
         print('\n', end="")
 
 

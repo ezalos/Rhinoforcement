@@ -97,8 +97,10 @@ if __name__ == "__main__":
         jo = load_state()
     except:
         jo = MCTS()
-#    for i in ft_progress(range(500)):
-#        jo.self_play_one_game()
+    print("do you want to train ? (y/n)")
+    if (input() == "y"):
+        for i in ft_progress(range(500)):
+            jo.self_play_one_game()
 #    jo.display()
     save_state(jo)
     jo.play_vs_MCTS()

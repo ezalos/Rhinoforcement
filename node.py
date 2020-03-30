@@ -31,7 +31,7 @@ class node():
         '''
         if (child == None):
             child = node(self.state, self)
-        self.children[action] = child
+        self.children.get(action) = child
         if len(self.actions) == len(self.children):
             self.is_fully_expanded = True
 
@@ -106,4 +106,4 @@ class node():
         print(" " * (max_nb_size - len(str(self.total_reward))), end="")
         print(self.total_reward, "/", self.visits, end="")
         print(" " * (max_nb_size - len(str(self.visits))), end="")
-        print("=", str(self.UCB1())[:4], RESET, end="")
+        print("=", str(self.UCB1())[:7], RESET, end="")

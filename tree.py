@@ -27,6 +27,7 @@ class tree():
         if (node == None):
             node = self.root
         best_UCB1 = -100000000000
+        best_action = -1 #quick fix
         for action in node.actions :
             danger = node.children.get(action)
             if danger != None:
@@ -35,14 +36,13 @@ class tree():
                     best_UCB1 = new_UCB1
                     best_action = action
         for act in node.state.actions():
-#            print("act", act)
-            child = node.children[act]
+            child = node.children.get(act)
             if deepness < 2 or act == node.state.actions()[0]:
                 print("    " * deepness, end="")
             if act == best_action:
                 print(UNDERLINE, end="")
             if deepness % 2 == 1:
-                print(PURPLE, end="")
+                print(BLUE, end="")
             else:
                 print(RED, end="")
             print(act, "-->", end="")
