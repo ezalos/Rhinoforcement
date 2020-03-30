@@ -140,7 +140,7 @@ class MCTS():
         self.current_node = self.tree.root
         self.current_node.state.reset()
         while (self.current_node.state.victory is ''):
-            self.self_play_one_move()
+            self.self_play_one_move(400)
 
     def play_vs_MCTS(self):
         self.current_node = self.tree.root
@@ -151,32 +151,6 @@ class MCTS():
             if self.current_node.state.victory is '':
                 self.play_action(int(input()))
                 self.current_node.state.display()
-
-    def iterate_then_choose_move(self):
-        initial_node = self.current_node
-        initial_state = copy.deepcopy(self.current_node.state)
-        for i in range(self.iterations_per_turn):
-            self.current_node = initial_node
-            self.current_node.state = copy.deepcopy(initial_state)
-            while (self.current_node.is_fully_expanded):
-                action = self.select()
-                self.play_action(action)
-            if (self.current_node.state.victory != ''): #no fuckin clue how string comparisons work carefull untested
-                self.backpropagate(self.current_node, self.get_cacahuetas())
-            else:
-                self.expand()
-                self.backpropagate(self.current_node, self.simulate())
-        self.current_node = initial_node
-        self.current_node.state = copy.deepcopy(initial_state)
-        return (self.select())
-
-    def self_play_old(self):
-        self.current_node = self.tree.root
-        self.current_node.state.reset()
-        while (self.current_node.state.victory == ''):
-            action = self.iterate_then_choose_move()
-            self.play_action(action)
-        self.backpropagate(self.current_node, self.get_cacahuetas()) # maybe double backprop
 
     def display(self):
         print("Size MCTS = ", self.size)

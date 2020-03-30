@@ -97,11 +97,18 @@ if __name__ == "__main__":
         jo = load_state()
     except:
         jo = MCTS()
-    print("How do you want to train ? (y/n)")
-    if (input() == "y"):
-        for i in ft_progress(range(500)):
+    iterations = 25
+    print("How much times ", iterations, " should be run ?")
+    how = input()
+    try:
+        how = int(how)
+    except:
+        how = 0
+    while how:
+        for i in ft_progress(range(iterations)):
             jo.self_play_one_game()
-#    jo.display()
-    save_state(jo)
+        jo.display()
+        save_state(jo)
+        how -= 1
     jo.play_vs_MCTS()
     
