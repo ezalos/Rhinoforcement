@@ -52,23 +52,31 @@ class MCTS():
         new_visits = 0
         for action in self.current_node.actions :
             new_visits = self.current_node.children.get(action).visits
-            #print("action: ", action, "best_action: ", best_action, "UCB: ", new_UCB1, "best: ", best_UCB1)
             if (new_visits > best_visits):
                 best_visits = new_visits
                 best_action = action
         return (best_action)
-        
+
+    def play_action(self, action):
+        '''
+            Does the action.
+            the child node MUST ALREADY EXIST
+        '''     
+        self.current_node.state.drop_piece(action)
+        self.current_node = self.current_node.children.get(action)
+        self.current_node.state = self.current_node.daddy.state
+
     def selection(self):
-        while (self.current_node.is_fully_expanded == True and self.current_node.visits != 0 and self.current_node.state.victory is ''):
+        while (self.current_node.is_fully_expanded and self.current_node.visits != 0 and self.current_node.state.victory == ''):
             self.play_action(self.select())
+
 
     def expand(self):
         '''
             create all children for self.current_node
             WILL DESTROY EXISTING CHILDREN
         '''
-        self.current_node.expand()
-        self.size += 7
+        self.size += self.current_node.expand()
     
     def simulate(self, node = None, f = lambda x : random.randint(0, len(x) - 1)):
         '''
@@ -77,7 +85,7 @@ class MCTS():
         '''
         if node == None:
             node = self.current_node
-        state = node.state # maybe remove this later
+        state = copy.deepcopy(node.state) # maybe remove this later
         while state.victory is '':
             actions = state.actions()
             move = f(actions)
@@ -93,36 +101,33 @@ class MCTS():
                 node.total_reward -= cacahuetas
             node.visits += 1
             node = node.daddy
-    
-    def play_action(self, action):
-        '''
-            Does the action.
-            the child node MUST ALREADY EXIST
-        '''     
-        self.current_node.state.drop_piece(action)
-        self.current_node = self.current_node.children[action]
-   
+
     def play(self):
         '''
             Plays from current node to loss or victory and backpropagates the result
         '''
         self.selection()
-        if (self.current_node.visits != 0 and self.current_node.is_fully_expanded == False and self.current_node.state.victory is ''): # fishy feeling here
-            self.expand()
-            actions = self.current_node.actions
-            self.play_action(actions[random.randint(0, len(actions) - 1)])
-        cacahueta = self.simulate()
-        self.backpropagate(self.current_node, cacahueta)
+        if (self.current_node.state.victory != ''):
+            self.backpropagate(self.current_node, self.current_node.state.get_reward())
+        else:
+            if (self.current_node.visits == 0):
+                self.backpropagate(self.current_node, self.simulate())
+            elif (self.current_node.is_fully_expanded == False):
+                self.expand()
+                actions = self.current_node.actions
+                self.play_action(actions[random.randint(0, len(actions) - 1)]) #implement winning move here !
+                self.backpropagate(self.current_node, self.simulate())
 
-    def self_play_one_move(self):
+    def self_play_one_move(self, iterations = 400):
         '''
             runs many games from current_node, chooses a move the plays it.
         '''
+#        print("PLAY ONE TURN")
         initial_state = self.current_node.state
         initial_node = self.current_node
-        for i in range(400):
+        for i in range(iterations):                                            # HERE WE DEFINE ITERATIONS PER TURN !!!!
             self.current_node = initial_node
-            self.current_node.state = copy.deepcopy(initial_state)
+            self.current_node.state = copy.deepcopy(initial_state)      # use state.copy here performance vs storage ?
             self.play()
         self.current_node = initial_node
         self.current_node.state = initial_state
@@ -132,18 +137,18 @@ class MCTS():
         '''
             resets current node and state then plays a game vs itself
         '''
+#        print("PLAY ONE GAME")
         self.current_node = self.tree.root
-        self.current_node.state = state()
+        self.current_node.state.reset()
         while (self.current_node.state.victory is ''):
             self.self_play_one_move()
 
     def play_vs_MCTS(self):
         self.current_node = self.tree.root
-        self.current_node.state = state()
+        self.current_node.state.reset()
         while self.current_node.state.victory is '':
-            self.choose_move() #stupid
-            #self.play_action(int(input()))
-            print("AI play")
+            self.self_play_one_move(2000)
+#            print("AI play")
             self.current_node.state.display()
             if self.current_node.state.victory is '':
                 self.play_action(int(input()))
@@ -169,7 +174,7 @@ class MCTS():
 
     def self_play_old(self):
         self.current_node = self.tree.root
-        self.current_node.state = state()
+        self.current_node.state.reset()
         while (self.current_node.state.victory == ''):
             action = self.iterate_then_choose_move()
             self.play_action(action)

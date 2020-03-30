@@ -97,9 +97,9 @@ if __name__ == "__main__":
         jo = load_state()
     except:
         jo = MCTS()
-    for i in ft_progress(range(5000)):
-        jo.self_play_one_game()
-    jo.display()
+#    for i in ft_progress(range(500)):
+#        jo.self_play_one_game()
+#    jo.display()
     save_state(jo)
     jo.play_vs_MCTS()
     

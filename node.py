@@ -1,6 +1,7 @@
 from state import state
 import random
 import math
+import copy
 
 PURPLE = '\033[95m'
 BLUE = '\033[94m'
@@ -41,9 +42,15 @@ class node():
             return number of nodes added to tree
         '''
         count = 0
+        last_move_tmp = copy.deepcopy(self.state.last_move)
+        victory_tmp = copy.copy(self.state.victory) #undeep check
         for act in self.actions:
+            self.state.drop_piece(act)
             child = node(self.state, self)
             self.children[act] = child
+            self.state.undrop_piece()
+            self.state.last_move = copy.copy(last_move_tmp)
+            self.state.victory = copy.copy(victory_tmp)
             count += 1
         self.is_fully_expanded = True
         return (count)
@@ -53,7 +60,7 @@ class node():
             returns UCB1 value of current node (will crash if run on root of tree)
         '''
         if (self.visits == 0):
-            return (1234567890)
+            return (1234567890) #arbitrary big number here
         sqrt_log_of_visits = math.sqrt(math.log(self.daddy.visits) / self.visits)
         reward_visits = (self.total_reward / self.visits)
         c_explo = math.sqrt(2)

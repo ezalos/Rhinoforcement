@@ -40,6 +40,11 @@ class state():
         self.check_winner()
         self.player = "X" if self.player == "O" else "O"
 
+    def undrop_piece(self):
+        self.board[self.last_move[0]][self.last_move[1]] = " "
+        self.turn -= 1
+        self.player = "X" if self.player == "O" else "O"
+
     def check_line(self, y, x):
         player = self.player
         row = self.last_move[0]
@@ -119,6 +124,25 @@ class state():
                 acts.append(col)
         return acts
 
+    def reset(self):
+        self.player = "X"
+        self.last_move = [0,0]
+        self.turn = 0
+        self.victory = ''
+        for row in range(MAX_ROWS): ## replace by init boeard ?
+            for col in range(MAX_COLS):
+                self.board[row][col] = " "
+
+    def copy(self, other):
+        self.player = other.player
+        self.last_move[0] = other.last_move[0]
+        self.last_move[1] = other.last_move[1]
+        self.turn = other.turn
+        self.victory = other.victory
+        for row in range(MAX_ROWS):
+            for col in range(MAX_COLS):
+                self.board[row][col] = other.board[row][col]
+
     def display(self):
         board = self.board
         move = self.last_move
@@ -132,7 +156,7 @@ class state():
                 elif spot == 'O':
                     print(BLUE + 'O' + RESET, end="")
                 else:
-                    print('.', end="")
+                    print('.' + RESET, end="")
                 print(' ', end="")
             print('\n', end="")
         print('\n', end="")
