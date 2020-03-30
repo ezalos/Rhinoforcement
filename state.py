@@ -27,9 +27,9 @@ class state():
 
     def drop_piece(self, column):
         if self.victory != '' :
-            return "Game Over"
+            print("Game Over")
         elif self.board[0, column] != " ":
-            return "Invalid move"
+            print("Invalid move")
         else:
             row = MAX_ROWS - 1
             while " " != self.board[row, column]:
@@ -92,20 +92,32 @@ class state():
         else:
             return False
 
+    def get_reward(self):
+        '''
+            returns 1, 0 or -1 depending on the winner
+            assumes self.victory has been updated (done everytime we drop_piece)
+        '''
+        if self.victory == ".":
+            return (0)
+        elif self.victory == "X":
+            return (1)
+        elif self.victory == "O":
+            return (-1)
+        else:
+            return None
+
     def stringify(self):
         return (self.board.tostring())
     
-    def actions(self): # returns all possible moves
+    def actions(self):
+        '''
+            returns array of possible actions
+        '''
         acts = []
         for col in range(MAX_COLS):
             if self.board[0, col] == " ":
                 acts.append(col)
         return acts
-    
-    def create_child_state(self, action):
-        child_state = copy.deepcopy(self)
-        child_state.drop_piece(action)
-        return (child_state)
 
     def display(self):
         board = self.board
