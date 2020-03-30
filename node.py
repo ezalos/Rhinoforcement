@@ -31,7 +31,7 @@ class node():
         '''
         if (child == None):
             child = node(self.state, self)
-        self.children.get(action) = child
+        self.children[action] = child
         if len(self.actions) == len(self.children):
             self.is_fully_expanded = True
 
