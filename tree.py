@@ -1,34 +1,59 @@
 import numpy as np
-from game import state
+import math
+from state import state
+from node import node
 import copy
+import random
+from color import *
 
 # isterminal to be added
-class node():
-    def __init__(self, state = state(), parent = None):
-        self.state = state
-        self.daddy = parent
-        self.visits = 0
-        self.totalReward = 0
-        self.children = {}
-        #self.actions = []
-        if (self.state == None):
-            self.state = state()
-
-    def create_child(self, action):
-        childState = copy.deepcopy(self.state)
-        childState.drop_piece(action)
-        self.children[action] = node(childState, self)
-
-    def add_child(self, action, child):
-        self.children[action] = child
-
 
 class tree():
+    
     def __init__(self):
         self.root = node()
-        self.size = 1
-        self.hash = [{}] * 43
-        self.hash[0][self.root.state.stringify()] = self.root
+        #self.hash = [{}] * 43
+        #self.hash[0][self.root.state.stringify()] = self.root
+
+    def print_n_floor(self, node=None, limit=1, deepness=0):
+        max = len(str(self.root.visits))
+        if (node == None):
+            node = self.root
+        best_UCB1 = -100000000000
+        best_action = -1 #quick fix
+        for action in node.actions :
+            danger = node.children.get(action)
+            if danger != None:
+                new_UCB1 = danger.UCB1()
+                if (new_UCB1 > best_UCB1):
+                    best_UCB1 = new_UCB1
+                    best_action = action
+        for act in node.state.actions():
+            child = node.children.get(act)
+            if deepness < 2 or act == node.state.actions()[0]:
+                print("    " * deepness, end="")
+            if act == best_action:
+                print(UNDERLINE, end="")
+            if deepness % 2 == 1:
+                print(BLUE, end="")
+            else:
+                print(RED, end="")
+            print(act, "-->", end="")
+            if (child != None):
+                child.display(max)
+                if deepness < 2:
+                    print("")
+                elif act != node.state.actions()[-1]:
+                    print(" | ", end="")
+                if deepness < limit:
+                    self.print_n_floor(child, limit, deepness + 1)
+            else:
+                print("  NONE", RESET)
+        if deepness >= 2:
+            print("")
+
+    def display(self):
+        self.print_n_floor()
 
     def get_node_from_state(self, state):
         return self.hash[state.board.turn].get(state.stringify())
@@ -43,42 +68,6 @@ class tree():
         else:
             parent.children[action] = existing_child
 
-    def expand(self, node):
-        for action in (node.state.actions()):
-            child_state = node.state.create_child_state(action)
-            self.add_child_to_hash_and_parent(child_state, action, node)
-
-
-class MCTS():
-    def __init__(self, tree = tree()):
-        self.tree = tree
-        self.current_node = self.tree.root
-
-    def policy(self):
-        pass
-
-    def select(self):
-        # update .daddy in selected child
-        pass
-
-    def expand(self):
-        pass
-        self.tree.expand()
-
-    def simulate(self):
-        pass
-
-    def backpropagate(self):
-        pass
-
-    def explore(self):
-        pass
-
-    def exploit(self):
-        pass
-    
-
-
-                
-
-
+    def expand_hash(self, node, action):
+        child_state = node.state.create_child_state(action)
+        self.add_child_to_hash_and_parent(child_state, action, node)
