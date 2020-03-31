@@ -1,15 +1,7 @@
 from state import state
 import random
 import math
-
-PURPLE = '\033[95m'
-BLUE = '\033[94m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RED = '\033[91m'
-RESET = '\033[0m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
+from color import *
 
 class node():
     def __init__(self, state = state(), parent = None):

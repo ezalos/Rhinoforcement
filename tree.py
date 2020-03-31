@@ -4,16 +4,9 @@ from state import state
 from node import node
 import copy
 import random
+from color import *
 
 # isterminal to be added
-PURPLE = '\033[95m'
-BLUE = '\033[94m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RED = '\033[91m'
-RESET = '\033[0m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
 
 class tree():
     
