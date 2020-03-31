@@ -165,7 +165,23 @@ class MCTS():
             self.self_play_one_move_time()
             self.current_node.state.display()
             if self.current_node.state.victory is '':
-                self.play_action(int(input()))
+                to_play = None
+                while to_play == None:
+                    to_play = input("What should be your next move ?\n")
+                    try:
+                        to_play = int(to_play)
+                        if to_play < 0 or to_play > 6:
+                            to_play = None
+                        elif self.current_node.state.board[0, to_play] != " ":
+                            to_play = None
+                            print("Invalid move")
+                    except:
+                        to_play = input("Exit game? [y/n]\n")
+                        if to_play == "y":
+                            return
+                        else:
+                            to_play = None
+                self.play_action(to_play)
                 self.current_node.state.display()
 
     def display(self):
