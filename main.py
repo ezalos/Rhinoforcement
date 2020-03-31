@@ -93,10 +93,10 @@ if __name__ == "__main__":
         print("Simulations left : ", nb, "    ")
         #sleep(3)
 
-#    try:
-#        jo = load_state()
-#    except:
-#        jo = MCTS()
+    try:
+        jo = load_state()
+    except:
+        jo = MCTS()
 #    iterations = 25
 #    print("How much times ", iterations, " should be run ?")
 #    how = input()
@@ -111,6 +111,24 @@ if __name__ == "__main__":
 #        save_state(jo)
 #        how -= 1
 #    jo.play_vs_MCTS()
-    
-    jo = MCTS()
+    start = time.time()    
     jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)

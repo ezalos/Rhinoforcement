@@ -51,7 +51,7 @@ class MCTS():
                     act = 8
         return (act)
 
-    def select_old(self):
+    def select(self):
         '''
             returns the action leading to the state with the highest UCB score
         '''
@@ -63,6 +63,9 @@ class MCTS():
             if (new_UCB1 > best_UCB1):
                 best_UCB1 = new_UCB1
                 best_action = action
+            elif (new_UCB1 == best_UCB1):
+                if (random.randint(0, 2) == 2):
+                    best_action = action
         return (best_action)
 
     def select_greedy(self):
