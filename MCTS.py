@@ -17,7 +17,6 @@ class MCTS():
         pass
 
     def policy_UCB1(self):
-        print("POLICY")
         policy = numpy.full([7], numpy.NINF, dtype=float) #arbitrary small number so it will not be the maximum
         for action in self.current_node.actions :
             policy[action] = self.current_node.children.get(action).UCB1()
@@ -27,6 +26,11 @@ class MCTS():
         return(policy)
 
     def select_UCB1_policy(self):
+        '''
+            returns the action leading to the state with the highest UCB score.
+            will pick a random action among the best if there are multiple
+            3x SLOWER THAN SELECT HIGHEST UCBgi tpudh
+        '''
         policy = self.policy_UCB1()
         try:
             act = numpy.random.choice(7, 1, p = policy)[0]
@@ -122,14 +126,12 @@ class MCTS():
         return (state.get_reward())
 
     def backpropagate(self, node, cacahuetas):
-        turn = node.state.turn
+        if node.state.player == "0" :
+            cacahuetas = (-cacahuetas)
         while node is not None:
-            if turn % 2 == 1:
-                node.total_reward += cacahuetas 
-            else:
-                node.total_reward -= cacahuetas
+            node.total_reward += cacahuetas
             node.visits += 1
-            turn -= 1
+            cacahuetas = (-cacahuetas)
             node = node.daddy
 
     def play(self):

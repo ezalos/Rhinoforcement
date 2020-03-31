@@ -79,6 +79,29 @@ def one_turn(my_board):
     my_board.display()
     sleep(0.01)
 
+def time_one_game(self, jo):
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+    start = time.time()    
+    jo.self_play_one_game()
+    print(time.time() - start)
+
 if __name__ == "__main__":
     nb = 0
     while nb:
@@ -91,44 +114,21 @@ if __name__ == "__main__":
             one_turn(my_board)
             turn = turn + 1
         print("Simulations left : ", nb, "    ")
-        #sleep(3)
-
     try:
         jo = load_state()
     except:
         jo = MCTS()
-#    iterations = 25
-#    print("How much times ", iterations, " should be run ?")
-#    how = input()
-#    try:
-#        how = int(how)
-#    except:
-#        how = 0
-#    while how:
-#        for i in ft_progress(range(iterations)):
-#            jo.self_play_one_game()
-#        jo.display()
-#        save_state(jo)
-#        how -= 1
+    iterations = 25
+    print("How much times ", iterations, " should be run ?")
+    how = input()
+    try:
+        how = int(how)
+    except:
+        how = 0
+    while how:
+        for i in ft_progress(range(iterations)):
+            jo.self_play_one_game()
+        jo.display()
+        save_state(jo)
+        how -= 1
 #    jo.play_vs_MCTS()
-    start = time.time()    
-    jo.self_play_one_game()
-    print(time.time() - start)
-    start = time.time()    
-    jo.self_play_one_game()
-    print(time.time() - start)
-    start = time.time()    
-    jo.self_play_one_game()
-    print(time.time() - start)
-    start = time.time()    
-    jo.self_play_one_game()
-    print(time.time() - start)
-    start = time.time()    
-    jo.self_play_one_game()
-    print(time.time() - start)
-    start = time.time()    
-    jo.self_play_one_game()
-    print(time.time() - start)
-    start = time.time()    
-    jo.self_play_one_game()
-    print(time.time() - start)
