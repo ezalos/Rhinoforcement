@@ -28,7 +28,7 @@ class tree():
                 if (new_UCB1 > best_UCB1):
                     best_UCB1 = new_UCB1
                     best_action = action
-        for act in node.state.actions():
+        for act in node.actions:
             child = node.children.get(act)
             if deepness < 2 or act == node.state.actions()[0]:
                 print("    " * deepness, end="")
