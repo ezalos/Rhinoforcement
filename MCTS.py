@@ -4,6 +4,7 @@ import copy
 import random
 import time
 from color import *
+import numpy
 
 class MCTS():
 
@@ -16,7 +17,33 @@ class MCTS():
     def default_policy(self):
         pass
 
-    def select(self):
+    def policy_UCB1(self):
+        policy = numpy.full([7], numpy.NINF, dtype=float) #arbitrary small number so it will not be the maximum
+        for action in self.current_node.actions :
+            policy[action] = self.current_node.children.get(action).UCB1()
+        best_UCB1 = policy.max()
+        policy[policy != best_UCB1] = 0.0
+        policy = policy / (numpy.count_nonzero(policy) * best_UCB1)
+        return(policy)
+
+    def select_UCB1_policy(self):
+        '''
+            returns the action leading to the state with the highest UCB score.
+            will pick a random action among the best if there are multiple
+            3x SLOWER THAN SELECT HIGHEST UCBgi tpudh
+        '''
+        policy = self.policy_UCB1()
+        try:
+            act = numpy.random.choice(7, 1, p = policy)[0]
+        except:
+            act = 8
+            while (act == 8):
+                act = random.randint(0, 6)
+                if (policy[act] == 0):
+                    act = 8
+        return (act)
+
+    def select_highest_UCB1(self):
         '''
             returns the action leading to the state with the highest UCB score
         '''
@@ -25,11 +52,16 @@ class MCTS():
         new_UCB1 = 0
         for action in self.current_node.actions :
             new_UCB1 = self.current_node.children.get(action).UCB1()
-            #print("action: ", action, "best_action: ", best_action, "UCB: ", new_UCB1, "best: ", best_UCB1)
             if (new_UCB1 > best_UCB1):
                 best_UCB1 = new_UCB1
                 best_action = action
+            elif (new_UCB1 == best_UCB1):
+                if (random.randint(0, 2) == 2):
+                    best_action = action
         return (best_action)
+
+    def select(self):
+        return (self.select_UCB1_policy())
 
     def select_greedy(self):
         '''
@@ -95,14 +127,12 @@ class MCTS():
         return (state.get_reward())
 
     def backpropagate(self, node, cacahuetas):
-        turn = node.state.turn
+        if node.state.player == "0" :
+            cacahuetas = (-cacahuetas)
         while node is not None:
-            if turn % 2 == 1:
-                node.total_reward += cacahuetas 
-            else:
-                node.total_reward -= cacahuetas
+            node.total_reward += cacahuetas
             node.visits += 1
-            turn -= 1
+            cacahuetas = (-cacahuetas)
             node = node.daddy
 
     def play(self):

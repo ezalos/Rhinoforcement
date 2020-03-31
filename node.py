@@ -52,7 +52,7 @@ class node():
             returns UCB1 value of current node (will crash if run on root of tree)
         '''
         if (self.visits == 0):
-            return (1234567890) #arbitrary big number here
+            return (1234) #arbitrary big number here
         sqrt_log_of_visits = math.sqrt(math.log(self.daddy.visits) / self.visits)
         reward_visits = (self.total_reward / self.visits)
         c_explo = math.sqrt(2)
