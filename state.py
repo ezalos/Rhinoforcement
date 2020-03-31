@@ -2,18 +2,11 @@
 
 import numpy as np
 import copy
+from color import *
 
 MAX_ROWS = 6
 MAX_COLS = 7
 
-PURPLE = '\033[95m'
-BLUE = '\033[94m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RED = '\033[91m'
-RESET = '\033[0m'
-BOLD = '\033[1m'
-UNDERLINE = '\033[4m'
 
 class state():
     def __init__(self):
@@ -21,7 +14,7 @@ class state():
         self.init_board[self.init_board == "0.0"] = " "
         self.player = "X"
         self.board = self.init_board
-        self.last_move = [0,0]
+        self.last_move = [-1,-1]
         self.turn = 0
         self.victory = ''
 
@@ -42,9 +35,12 @@ class state():
         self.player = "X" if self.player == "O" else "O"
 
     def undrop_piece(self):
-        self.board[self.last_move[0]][self.last_move[1]] = " "
-        self.turn -= 1
-        self.player = "X" if self.player == "O" else "O"
+        if self.last_move[0] != -1:
+            self.board[self.last_move[0]][self.last_move[1]] = " "
+            self.turn -= 1
+            self.player = "X" if self.player == "O" else "O"
+        else:
+            print("No memory of last move")
 
     def check_line(self, y, x):
         player = self.player
@@ -87,16 +83,29 @@ class state():
         if self.turn >= 42:
             self.victory = '.'
             return False
-        elif self.check_line(1, 0):
-            return True
-        elif self.check_line(0, 1):
-            return True
-        elif self.check_line(1, 1):
-            return True
-        elif self.check_line(-1, 1):
-            return True
+        if self.last_move[0] == -1:
+            for row in MAX_ROWS:
+                for col in MAX_COLS:
+                    self.last_move = [row, col]
+                    if self.check_line(1, 0):
+                        return True
+                    elif self.check_line(0, 1):
+                        return True
+                    elif self.check_line(1, 1):
+                        return True
+                    elif self.check_line(-1, 1):
+                        return True
+            self.last_move = [-1, -1]
         else:
-            return False
+            if self.check_line(1, 0):
+                return True
+            elif self.check_line(0, 1):
+                return True
+            elif self.check_line(1, 1):
+                return True
+            elif self.check_line(-1, 1):
+                return True
+        return False
 
     def get_reward(self):
         '''
@@ -127,10 +136,10 @@ class state():
 
     def reset(self):
         self.player = "X"
-        self.last_move = [0,0]
+        self.last_move = [-1,-1]
         self.turn = 0
         self.victory = ''
-        for row in range(MAX_ROWS): ## replace by init boeard ?
+        for row in range(MAX_ROWS): ## replace by init board ?
             for col in range(MAX_COLS):
                 self.board[row][col] = " "
 
@@ -144,9 +153,39 @@ class state():
             for col in range(MAX_COLS):
                 self.board[row][col] = other.board[row][col]
 
+    def encode_board(self):
+        encoded = np.zeros([MAX_ROWS, MAX_COLS, 3]).astype(int)
+        player_conv = {'O':0, 'X':1}
+        for row in range(MAX_ROWS):
+            for col in range(MAX_COLS):
+                pos = self.board[row, col]
+                if pos != " ":
+                    encoded[row, col, player_conv[pos]] = 1
+        encoded[:,:,2] = player_conv[self.player]
+        return encoded
+    
+    def decode_board(self, encoded):
+        self.reset()
+        player_conv = {0:'O', 1:'X'}
+        for row in range(MAX_ROWS):
+            for col in range(MAX_COLS):
+                for player in range(2):
+                    pos = encoded[row, col, player]
+                    if pos == 1:
+                        self.board[row, col] = player_conv[player]
+                        self.turn += 1
+        self.player = player_conv[encoded[0,0,2]]
+        self.check_winner()
+
     def display(self):
         board = self.board
         move = self.last_move
+        print("Turn", YELLOW, self.turn, RESET, "for ", end="")
+        if self.player == "X":
+            print(RED + 'X' + RESET, end="")
+        else:
+            print(BLUE + 'O' + RESET, end="")
+        print("")
         for rows in range(MAX_ROWS):
             for cols in range(MAX_COLS):
                 spot = board[rows, cols]
