@@ -3,6 +3,7 @@ from state import state
 import copy
 import random
 import time
+from color import *
 
 class MCTS():
 
@@ -164,6 +165,9 @@ class MCTS():
         while self.current_node.state.victory is '':
             self.self_play_one_move_time()
             self.current_node.state.display()
+            print("Last move: W/N=UCB1\t",PURPLE, end="")
+            self.current_node.display()
+            print(RESET)
             if self.current_node.state.victory is '':
                 to_play = None
                 while to_play == None:
@@ -183,6 +187,9 @@ class MCTS():
                             to_play = None
                 self.play_action(to_play)
                 self.current_node.state.display()
+                print("Last move: W/N=UCB1\t",PURPLE, end="")
+                self.current_node.display()
+                print(RESET)
 
     def display(self):
         print("Size MCTS = ", self.size)
