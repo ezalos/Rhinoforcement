@@ -1,6 +1,7 @@
 from state import state
 import random
 import math
+import copy
 
 PURPLE = '\033[95m'
 BLUE = '\033[94m'
@@ -19,22 +20,47 @@ class node():
         self.total_reward = 0
         self.children = {}
         self.actions = self.state.actions()
-        self.is_fully_expanded = 0 #TO UPDATE
+        self.is_fully_expanded = False #TO UPDATE
         if (self.state == None):
             self.state = state()
 
-    def create_child(self, action):
-        childState = self.state.create_child_state(action)
-        self.children[action] = node(childState, self)
-        if len(self.actions) == len(self.children):
-            self.is_fully_expanded = 1
-
-    def add_child(self, action, child):
+    def add_child(self, action, child = None):
+        '''
+            adds existing node to the children dictionary of self. (with action as its key)
+            if no node is given as argument, will create new node instance (sharing ref to board)
+        '''
+        if (child == None):
+            child = node(self.state, self)
         self.children[action] = child
         if len(self.actions) == len(self.children):
-            self.is_fully_expanded = 1
+            self.is_fully_expanded = True
+
+    def expand(self):
+        '''
+            Expands node. Creates all child nodes and adds them to dictionary.
+            USE ONLY ON NODES WITH NO CHILDREN, existing children will be replaced.
+            return number of nodes added to tree
+        '''
+        count = 0
+        last_move_tmp = copy.deepcopy(self.state.last_move)
+        victory_tmp = copy.copy(self.state.victory) #undeep check
+        for act in self.actions:
+            self.state.drop_piece(act)
+            child = node(self.state, self)
+            self.children[act] = child
+            self.state.undrop_piece()
+            self.state.last_move = copy.copy(last_move_tmp)
+            self.state.victory = copy.copy(victory_tmp)
+            count += 1
+        self.is_fully_expanded = True
+        return (count)
 
     def UCB1(self):
+        '''
+            returns UCB1 value of current node (will crash if run on root of tree)
+        '''
+        if (self.visits == 0):
+            return (1234567890) #arbitrary big number here
         sqrt_log_of_visits = math.sqrt(math.log(self.daddy.visits) / self.visits)
         reward_visits = (self.total_reward / self.visits)
         c_explo = math.sqrt(2)
@@ -58,15 +84,15 @@ class node():
 
     def play_move_keep_board(self, action):
         '''
-        will do the action and pass a pointer/reference to the board to the corresponding
-        child node. The child node will be created if necessary
+            will do the action and pass a pointer/reference to the board to the corresponding
+            child node. The child node will be created if necessary
         '''
         existing_child = self.children.get(action)
         self.state.drop_piece(action)
         if (existing_child == None):
             self.children[action] = node(self.state, self)
             if (len(self.children) == len(self.actions)):
-                self.is_fully_expanded = 1
+                self.is_fully_expanded = True
         else:
             self.children.get(action).state = self.state
 
@@ -74,10 +100,10 @@ class node():
         self.state.drop_piece(action)
         self.children[action] = node(self.state, self)
         if (len(self.children) == len(self.actions)):
-            self.is_fully_expanded = 1
+            self.is_fully_expanded = True
                 
     def display(self, max_nb_size = 5):
         print(" " * (max_nb_size - len(str(self.total_reward))), end="")
         print(self.total_reward, "/", self.visits, end="")
         print(" " * (max_nb_size - len(str(self.visits))), end="")
-        print("=", str(self.UCB1())[:4], RESET, end="")
+        print("=", str(self.UCB1())[:7], RESET, end="")

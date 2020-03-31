@@ -27,9 +27,9 @@ class state():
 
     def drop_piece(self, column):
         if self.victory != '' :
-            return "Game Over"
+            print("Game Over")
         elif self.board[0, column] != " ":
-            return "Invalid move"
+            print("Invalid move")
         else:
             row = MAX_ROWS - 1
             while " " != self.board[row, column]:
@@ -38,6 +38,11 @@ class state():
         self.last_move = [row, column]
         self.turn += 1
         self.check_winner()
+        self.player = "X" if self.player == "O" else "O"
+
+    def undrop_piece(self):
+        self.board[self.last_move[0]][self.last_move[1]] = " "
+        self.turn -= 1
         self.player = "X" if self.player == "O" else "O"
 
     def check_line(self, y, x):
@@ -92,20 +97,51 @@ class state():
         else:
             return False
 
+    def get_reward(self):
+        '''
+            returns 1, 0 or -1 depending on the winner
+            assumes self.victory has been updated (done everytime we drop_piece)
+        '''
+        if self.victory == ".":
+            return (0)
+        elif self.victory == "X":
+            return (1)
+        elif self.victory == "O":
+            return (-1)
+        else:
+            return None
+
     def stringify(self):
         return (self.board.tostring())
     
-    def actions(self): # returns all possible moves
+    def actions(self):
+        '''
+            returns array of possible actions
+        '''
         acts = []
         for col in range(MAX_COLS):
             if self.board[0, col] == " ":
                 acts.append(col)
         return acts
-    
-    def create_child_state(self, action):
-        child_state = copy.deepcopy(self)
-        child_state.drop_piece(action)
-        return (child_state)
+
+    def reset(self):
+        self.player = "X"
+        self.last_move = [0,0]
+        self.turn = 0
+        self.victory = ''
+        for row in range(MAX_ROWS): ## replace by init boeard ?
+            for col in range(MAX_COLS):
+                self.board[row][col] = " "
+
+    def copy(self, other):
+        self.player = other.player
+        self.last_move[0] = other.last_move[0]
+        self.last_move[1] = other.last_move[1]
+        self.turn = other.turn
+        self.victory = other.victory
+        for row in range(MAX_ROWS):
+            for col in range(MAX_COLS):
+                self.board[row][col] = other.board[row][col]
 
     def display(self):
         board = self.board
@@ -120,9 +156,12 @@ class state():
                 elif spot == 'O':
                     print(BLUE + 'O' + RESET, end="")
                 else:
-                    print('.', end="")
+                    print('.' + RESET, end="")
                 print(' ', end="")
             print('\n', end="")
+        print("0 1 2 3 4 5 6")
+        if (self.victory != ''):
+            print("Victory: ", self.victory)
         print('\n', end="")
 
 

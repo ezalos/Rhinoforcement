@@ -19,42 +19,15 @@ class tree():
     
     def __init__(self):
         self.root = node()
-        self.size = 1
-        self.hash = [{}] * 43
-        self.hash[0][self.root.state.stringify()] = self.root
-
-    def get_node_from_state(self, state):
-        return self.hash[state.board.turn].get(state.stringify())
-    
-    def add_child_to_hash_and_parent(self, child_state, action, parent):
-        existing_child = self.get_node_from_state(child_state)
-        if (existing_child == None): # .key ?
-            child = node(child_state, parent)
-            self.hash[child_state.board.turn][child_state.stringify()] = child
-            parent.children[action] = child
-            self.size += 1
-        else:
-            parent.children[action] = existing_child
-
-    def add_child_to_parent(self, child_state, action, parent):
-        child = node(child_state, parent)
-        parent.add_child(action, child)
-        self.size += 1
-        return child
-
-    def expand(self, node, action):
-        child = node.create_child(action)
-        self.add_child_to_parent(child, action, node)
-
-    def expand_hash(self, node, action):
-        child_state = node.state.create_child_state(action)
-        self.add_child_to_hash_and_parent(child_state, action, node)
+        #self.hash = [{}] * 43
+        #self.hash[0][self.root.state.stringify()] = self.root
 
     def print_n_floor(self, node=None, limit=1, deepness=0):
         max = len(str(self.root.visits))
         if (node == None):
             node = self.root
         best_UCB1 = -100000000000
+        best_action = -1 #quick fix
         for action in node.actions :
             danger = node.children.get(action)
             if danger != None:
@@ -63,13 +36,13 @@ class tree():
                     best_UCB1 = new_UCB1
                     best_action = action
         for act in node.state.actions():
-            child = node.children[act]
+            child = node.children.get(act)
             if deepness < 2 or act == node.state.actions()[0]:
                 print("    " * deepness, end="")
             if act == best_action:
                 print(UNDERLINE, end="")
             if deepness % 2 == 1:
-                print(PURPLE, end="")
+                print(BLUE, end="")
             else:
                 print(RED, end="")
             print(act, "-->", end="")
@@ -88,3 +61,20 @@ class tree():
 
     def display(self):
         self.print_n_floor()
+
+    def get_node_from_state(self, state):
+        return self.hash[state.board.turn].get(state.stringify())
+    
+    def add_child_to_hash_and_parent(self, child_state, action, parent):
+        existing_child = self.get_node_from_state(child_state)
+        if (existing_child == None): # .key ?
+            child = node(child_state, parent)
+            self.hash[child_state.board.turn][child_state.stringify()] = child
+            parent.children[action] = child
+            self.size += 1
+        else:
+            parent.children[action] = existing_child
+
+    def expand_hash(self, node, action):
+        child_state = node.state.create_child_state(action)
+        self.add_child_to_hash_and_parent(child_state, action, node)
