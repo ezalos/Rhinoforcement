@@ -189,19 +189,15 @@ class MCTS():
         while (self.current_node.state.victory is ''):
             self.self_play_one_move(400)
 
-    def play_vs_MCTS(self):
-        self.current_node = self.tree.root
-        self.current_node.state.reset()
-        while self.current_node.state.victory is '':
-            self.self_play_one_move_time()
-            self.current_node.state.display()
-            print("Last move: W/N=UCB1\t",PURPLE, end="")
-            self.current_node.display()
-            print(RESET)
-            if self.current_node.state.victory is '':
-                to_play = None
-                while to_play == None:
-                    to_play = input("What should be your next move ?\n")
+    def human_play_one_move(self):
+        if self.current_node.state.victory is '':
+            to_play = None
+            while to_play == None:
+                to_play = input("What should be your next move ?\n")
+                if to_play == "cheat":
+                    self.tree.print_n_floor(self.current_node, limit=0)
+                    to_play = None
+                else:
                     try:
                         to_play = int(to_play)
                         if to_play < 0 or to_play > 6:
@@ -215,11 +211,27 @@ class MCTS():
                             return
                         else:
                             to_play = None
-                self.play_action(to_play)
-                self.current_node.state.display()
-                print("Last move: W/N=UCB1\t",PURPLE, end="")
-                self.current_node.display()
-                print(RESET)
+            self.play_action(to_play)
+
+    def play_vs_MCTS(self):
+        self.current_node = self.tree.root
+        self.current_node.state.reset()
+        while (True):
+            play_as = input("Play first or second ? [1/2]\n")
+            if play_as == "1":
+                play_as = "X"; break
+            elif play_as == "2":
+                play_as = "O"; break
+            else:
+                print("I didn't get that.")
+        while self.current_node.state.victory is '':
+            self.current_node.state.display()
+            if self.current_node.state.player == play_as:
+                self.human_play_one_move()
+            else:
+                self.self_play_one_move_time()
+            self.tree.print_n_floor(self.current_node.daddy, limit=0)
+        self.current_node.state.display()
 
     def display(self):
         print("Size MCTS = ", self.size)

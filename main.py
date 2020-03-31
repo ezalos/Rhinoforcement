@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/28 16:43:02 by ezalos           ###   ########.fr        #
+#    Updated: 2020/03/31 17:52:17 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -131,4 +131,4 @@ if __name__ == "__main__":
         jo.display()
         save_state(jo)
         how -= 1
-#    jo.play_vs_MCTS()
+    jo.play_vs_MCTS()
