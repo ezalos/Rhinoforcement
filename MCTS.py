@@ -16,34 +16,21 @@ class MCTS():
     def default_policy(self):
         pass
 
-    def policy(self):
-        policy = numpy.zeros([7])
-        best_action = self.current_node.actions[0]
-        best_UCB1 = self.current_node.children.get(best_action).UCB1()
-        policy[best_action] = best_UCB1
-        new_UCB1 = 0
-        count_equal = 0
+    def policy_UCB1(self):
+        print("POLICY")
+        policy = numpy.full([7], numpy.NINF, dtype=float) #arbitrary small number so it will not be the maximum
         for action in self.current_node.actions :
-            new_UCB1 = self.current_node.children.get(action).UCB1()
             policy[action] = self.current_node.children.get(action).UCB1()
-            if (new_UCB1 > best_UCB1):
-                best_UCB1 = new_UCB1
-                best_action = action
-        for i in range(7):
-            if (policy[i] != best_UCB1):
-                policy[i] = 0.0
-            if (policy[i] == best_UCB1):
-                count_equal += 1
-        for i in range(7):
-            policy[i] = policy[i] / (best_UCB1 * count_equal)
-        return (policy)
+        best_UCB1 = policy.max()
+        policy[policy != best_UCB1] = 0.0
+        policy = policy / (numpy.count_nonzero(policy) * best_UCB1)
+        return(policy)
 
-    def select(self):
-        policy = self.policy()
+    def select_UCB1_policy(self):
+        policy = self.policy_UCB1()
         try:
             act = numpy.random.choice(7, 1, p = policy)[0]
         except:
-            print(policy)
             act = 8
             while (act == 8):
                 act = random.randint(0, 6)
@@ -51,7 +38,7 @@ class MCTS():
                     act = 8
         return (act)
 
-    def select(self):
+    def select_highest_UCB1(self):
         '''
             returns the action leading to the state with the highest UCB score
         '''
@@ -67,6 +54,9 @@ class MCTS():
                 if (random.randint(0, 2) == 2):
                     best_action = action
         return (best_action)
+
+    def select(self):
+        return (self.select_UCB1_policy())
 
     def select_greedy(self):
         '''
