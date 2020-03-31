@@ -30,6 +30,7 @@ class state():
             print("Game Over")
         elif self.board[0, column] != " ":
             print("Invalid move")
+            print(row)
         else:
             row = MAX_ROWS - 1
             while " " != self.board[row, column]:

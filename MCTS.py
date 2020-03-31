@@ -3,6 +3,7 @@ from state import state
 import copy
 import random
 import time
+import numpy
 
 class MCTS():
 
@@ -15,7 +16,42 @@ class MCTS():
     def default_policy(self):
         pass
 
+    def policy(self):
+        policy = numpy.zeros([7])
+        best_action = self.current_node.actions[0]
+        best_UCB1 = self.current_node.children.get(best_action).UCB1()
+        policy[best_action] = best_UCB1
+        new_UCB1 = 0
+        count_equal = 0
+        for action in self.current_node.actions :
+            new_UCB1 = self.current_node.children.get(action).UCB1()
+            policy[action] = self.current_node.children.get(action).UCB1()
+            if (new_UCB1 > best_UCB1):
+                best_UCB1 = new_UCB1
+                best_action = action
+        for i in range(7):
+            if (policy[i] != best_UCB1):
+                policy[i] = 0.0
+            if (policy[i] == best_UCB1):
+                count_equal += 1
+        for i in range(7):
+            policy[i] = policy[i] / (best_UCB1 * count_equal)
+        return (policy)
+
     def select(self):
+        policy = self.policy()
+        try:
+            act = numpy.random.choice(7, 1, p = policy)[0]
+        except:
+            print(policy)
+            act = 8
+            while (act == 8):
+                act = random.randint(0, 6)
+                if (policy[act] == 0):
+                    act = 8
+        return (act)
+
+    def select_old(self):
         '''
             returns the action leading to the state with the highest UCB score
         '''
@@ -24,7 +60,6 @@ class MCTS():
         new_UCB1 = 0
         for action in self.current_node.actions :
             new_UCB1 = self.current_node.children.get(action).UCB1()
-            #print("action: ", action, "best_action: ", best_action, "UCB: ", new_UCB1, "best: ", best_UCB1)
             if (new_UCB1 > best_UCB1):
                 best_UCB1 = new_UCB1
                 best_action = action

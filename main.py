@@ -93,22 +93,24 @@ if __name__ == "__main__":
         print("Simulations left : ", nb, "    ")
         #sleep(3)
 
-    try:
-        jo = load_state()
-    except:
-        jo = MCTS()
-    iterations = 25
-    print("How much times ", iterations, " should be run ?")
-    how = input()
-    try:
-        how = int(how)
-    except:
-        how = 0
-    while how:
-        for i in ft_progress(range(iterations)):
-            jo.self_play_one_game()
-        jo.display()
-        save_state(jo)
-        how -= 1
-    jo.play_vs_MCTS()
+#    try:
+#        jo = load_state()
+#    except:
+#        jo = MCTS()
+#    iterations = 25
+#    print("How much times ", iterations, " should be run ?")
+#    how = input()
+#    try:
+#        how = int(how)
+#    except:
+#        how = 0
+#    while how:
+#        for i in ft_progress(range(iterations)):
+#            jo.self_play_one_game()
+#        jo.display()
+#        save_state(jo)
+#        how -= 1
+#    jo.play_vs_MCTS()
     
+    jo = MCTS()
+    jo.self_play_one_game()
