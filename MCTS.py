@@ -2,6 +2,7 @@ from tree import tree
 from state import state
 import copy
 import random
+import time
 
 class MCTS():
 
@@ -133,6 +134,21 @@ class MCTS():
         self.current_node.state.copy(initial_state)
         self.play_action(self.select_most_visits())
 
+    def self_play_one_move_time(self, time_per_move = 1):
+        '''
+            runs many games from current_node, chooses a move the plays it.
+        '''
+        initial_state = copy.deepcopy(self.current_node.state)
+        initial_node = self.current_node
+        timer = time.time()
+        while (time.time() < timer + time_per_move):                                            # HERE WE DEFINE ITERATIONS PER TURN !!!!
+            self.current_node = initial_node
+            self.current_node.state.copy(initial_state)
+            self.play()
+        self.current_node = initial_node
+        self.current_node.state.copy(initial_state)
+        self.play_action(self.select_most_visits())
+
     def self_play_one_game(self):
         '''
             resets current node and state then plays a game vs itself
@@ -146,7 +162,7 @@ class MCTS():
         self.current_node = self.tree.root
         self.current_node.state.reset()
         while self.current_node.state.victory is '':
-            self.self_play_one_move(2000)
+            self.self_play_one_move_time()
             self.current_node.state.display()
             if self.current_node.state.victory is '':
                 self.play_action(int(input()))
