@@ -202,12 +202,14 @@ class MCTS():
                     try:    
                         if int(to_play) in self.current_node.state.actions():
                             to_play = int(to_play)
+                            self.play_action(to_play)
                             break
+                            return True
                         else:
                             print("Invalid move.")
                     except:
                         print("I didn't get that.")
-            self.play_action(to_play)
+        return True
 
     def play_vs_MCTS(self):
         self.current_node = self.tree.root
