@@ -58,7 +58,7 @@ def ft_progress(listy):
 		yield i
 	print("")
 
-cache = "./data/part_back_"
+cache = "cache_MCTS_tree"
 
 def save_state(s_object, file_name = cache):
     with open(file_name, 'wb') as my_cache:
@@ -125,6 +125,6 @@ if __name__ == "__main__":
         for i in ft_progress(range(iterations)):
             jo.self_play_one_game(dataset)
         jo.display()
-        save_state(jo, cache + str(k))
+        save_state(jo, cache)
         k += 1
 #    jo.play_vs_MCTS()

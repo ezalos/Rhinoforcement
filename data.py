@@ -10,13 +10,13 @@ class datapoint():
         self.V = value                     #scalar
 
 class dataset():
-    def _init(self):
+    def __init__(self):
         self.data = []
 
     def make_policy_vector_from_node(self, node):
         out = np.zeros([7], dtype= float)
         for act in node.actions :
-            out[act] = node.children.get(act).visits.float()
+            out[act] = node.children.get(act).visits
         out = out / np.sum(out)                                    #dunno untested 
         return (out)
 
