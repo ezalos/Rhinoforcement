@@ -12,6 +12,7 @@ class tree():
     
     def __init__(self):
         self.root = node()
+        self.current_root = self.root 
         #self.hash = [{}] * 43
         #self.hash[0][self.root.state.stringify()] = self.root
 
@@ -28,9 +29,9 @@ class tree():
                 if (new_UCB1 > best_UCB1):
                     best_UCB1 = new_UCB1
                     best_action = action
-        for act in node.state.actions():
+        for act in node.actions:
             child = node.children.get(act)
-            if deepness < 2 or act == node.state.actions()[0]:
+            if deepness < 2 or act == node.actions[0]:
                 print("    " * deepness, end="")
             if act == best_action:
                 print(UNDERLINE, end="")

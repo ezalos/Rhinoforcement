@@ -57,12 +57,16 @@ def ft_progress(listy):
 		yield i
 	print("")
 
-cache = "cache_MCTS_Tree"
+cache = "./data/part_back_"
 
 def save_state(s_object, file_name = cache):
     with open(file_name, 'wb') as my_cache:
         pickle.dump(s_object, my_cache)
         print("Save of cache successful, tree size = ", s_object.size)
+
+def dirty_save(s_object, file_name):
+    pickle.dump(s_object, open(file_name, 'wb'))
+    print("Save of cache successful, tree size = ", s_object.size)
 
 def load_state(file_name = cache):
     with open(file_name, 'rb') as my_cache:
@@ -103,17 +107,6 @@ def time_one_game(self, jo):
     print(time.time() - start)
 
 if __name__ == "__main__":
-    nb = 0
-    while nb:
-        nb -= 1
-        my_board = state()
-        turn = 0
-        while my_board.check_winner() is not True and turn < 42:
-            #input()
-            print("\n\n\nTurn :\t", turn)
-            one_turn(my_board)
-            turn = turn + 1
-        print("Simulations left : ", nb, "    ")
     try:
         jo = load_state()
     except:
@@ -125,10 +118,11 @@ if __name__ == "__main__":
         how = int(how)
     except:
         how = 0
-    while how:
+    k = 0
+    while k < how:
         for i in ft_progress(range(iterations)):
             jo.self_play_one_game()
         jo.display()
-        save_state(jo)
-        how -= 1
-    jo.play_vs_MCTS()
+        save_state(jo, cache + str(k))
+        k += 1
+#    jo.play_vs_MCTS()
