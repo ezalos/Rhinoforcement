@@ -26,6 +26,7 @@ import copy
 import logging
 import pickle
 
+from data import dataset
 import sys
 from time import sleep
 import time
@@ -111,6 +112,7 @@ if __name__ == "__main__":
         jo = load_state()
     except:
         jo = MCTS()
+    dataset = dataset()
     iterations = 25
     print("How much times ", iterations, " should be run ?")
     how = input()
@@ -121,7 +123,7 @@ if __name__ == "__main__":
     k = 0
     while k < how:
         for i in ft_progress(range(iterations)):
-            jo.self_play_one_game()
+            jo.self_play_one_game(dataset)
         jo.display()
         save_state(jo, cache + str(k))
         k += 1

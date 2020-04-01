@@ -5,4 +5,4 @@ test
 __pycache__
 *.pyc
 cache_*
-data/*
+tree_data/*
