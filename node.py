@@ -1,4 +1,5 @@
 from state import state
+from deep import Deep_Neural_Net
 import random
 import math
 import copy
@@ -59,6 +60,21 @@ class node():
         #c_explo = 2
         result = reward_visits + c_explo * sqrt_log_of_visits
         return result
+
+    def PUCB(self):
+        PUCB = []
+        C_explo = 1
+        DNN = Deep_Neural_Net()
+        DNN.convert_state(state)
+        DNN.run()
+        for act in self.actions:
+            child = self.children.get(act)
+            if child != None and child.visits != 0:
+                Q = child.total_reward
+                P = DNN.policy[act]
+                N = math.sqrt(self.visits) / child.visits
+                PUCB.append(Q + (C_explo * P * N))
+        return PUCB
 
     def winrate(self):
         return (self.total_reward / self.visits)
