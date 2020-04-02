@@ -119,7 +119,8 @@ class node():
         print(" " * (max_nb_size - len(str(self.total_reward))), end="")
         print(self.total_reward, "/", self.visits, end="")
         print(" " * (max_nb_size - len(str(self.visits))), end="")
-        print("=", str(self.UCB1())[:7], RESET, end="")
+        #print("=", str(self.PUCT())[:7], RESET, end="")
+        print(RESET, end="")
 
     def print_n_floor(self, node = None, limit=1, deepness=0):
         if node == None:

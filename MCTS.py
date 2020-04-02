@@ -13,7 +13,7 @@ import sklearn
 
 class MCTS():
 
-    def __init__(self, node = node(), tree_policy = None, rollout_policy = None, dataset = dataset()):
+    def __init__(self, node = node(), dataset = dataset(), tree_policy = None, rollout_policy = None):
         '''
             tree policy takes a node and returns an action, rollout_policy takes a node and retruns a value.
         '''
@@ -83,6 +83,7 @@ class MCTS():
 
         self.play_action(action)
         self.root = self.current_node
+        self.root.state.display()
         v = self.self_play(dataset)
         dataset.data[dataset_index] = v
         return -v

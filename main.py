@@ -16,6 +16,7 @@ from datetime import datetime
 from time import sleep
 from state import state
 from MCTS import MCTS
+from node import node
 import random
 import copy
 
@@ -110,10 +111,10 @@ if __name__ == "__main__":
     k = 0
     while k < how:
         save_dnn = jo.dnn
-        jo = MCTS()
+        jo = MCTS(node(), dataset)
         jo.dnn = save_dnn
         for i in ft_progress(range(iterations)):
-            jo.self_play_one_game(dataset)
+            jo.self_play_new_game()
         jo.display()
         save_state(dataset, "cache_dataset")
         for data in dataset.data:
@@ -125,6 +126,5 @@ if __name__ == "__main__":
 #    jo.play_vs_MCTS()
     jo = MCTS()
     for _ in range(100):
-        jo.self_play_new_game()
         jo.current_node.state.display()
         jo.tree_root.print_n_floor()
