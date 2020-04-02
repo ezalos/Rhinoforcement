@@ -44,7 +44,7 @@ class tree():
                 child.display(max)
                 if deepness < 2:
                     print("")
-                elif act != node.state.actions()[-1]:
+                elif act != node.actions[-1]:
                     print(" | ", end="")
                 if deepness < limit:
                     self.print_n_floor(child, limit, deepness + 1)

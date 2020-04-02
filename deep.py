@@ -81,13 +81,13 @@ class ConnectNet(nn.Module):
     def __init__(self):
         super(ConnectNet, self).__init__()
         self.conv = ConvBlock()
-        for block in range(19):
+        for block in range(5):
             setattr(self, "res_%i" % block,ResBlock())
         self.outblock = OutBlock()
     
     def forward(self,s):
         s = self.conv(s)
-        for block in range(19):
+        for block in range(5):
             s = getattr(self, "res_%i" % block)(s)
         s = self.outblock(s)
         return s
@@ -104,4 +104,58 @@ class AlphaLoss(torch.nn.Module):
         total_error = (value_error.view(-1).float() + policy_error).mean()
         return total_error
 
+class Deep_Neural_Net():
+    def __init__(self):
+        self.temp = 1
+        self.deep_neural_net = ConnectNet()
+        self.policy = None
+        self.value = None
+    
+    def convert_state(self, state):
+        encoded_s = state.encode_board();
+        encoded_s = encoded_s.transpose(2,0,1)
+        encoded_s = torch.from_numpy(encoded_s).float()#.cuda()
+        self.encoded_state = encoded_s
 
+    def run(self):
+        policy, value = self.deep_neural_net(self.encoded_state)
+        self.policy = policy.detach().cpu().numpy().reshape(-1);
+        self.value = value.item()
+        return policy, value
+
+    def train(self, state, value, policy):
+        self.convert_state(state.encode_board())
+        value = torch.from_numpy(value).float()
+        policy = torch.from_numpy(policy).float()
+
+        policy_pred, value_pred = self.run()
+        
+        criterion = AlphaLoss()
+        loss = criterion(value_pred[:,0], value, policy_pred, policy)
+        loss = loss/args.gradient_acc_steps
+        loss.backward()
+        #if (epoch % args.gradient_acc_steps) == 0:
+        #    optimizer.step()
+        #    optimizer.zero_grad()
+        #total_loss += loss.item()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    

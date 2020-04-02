@@ -4,6 +4,7 @@ import copy
 import random
 import time
 from color import *
+from deep import Deep_Neural_Net
 import numpy
 from data import dataset
 from data import datapoint
@@ -16,6 +17,7 @@ class MCTS():
         self.tree = tree
         self.current_node = self.tree.root
         self.size = 0
+        self.dnn = Deep_Neural_Net()
 
     def default_policy(self):
         pass
@@ -63,7 +65,7 @@ class MCTS():
         return (best_action)
 
     def select(self):
-        return (self.select_highest_UCB1())
+        return (self.current_node.PUCT(self.dnn))
 
     def select_greedy(self):
         '''
@@ -173,10 +175,12 @@ class MCTS():
         '''
         initial_state = copy.deepcopy(self.current_node.state)
         initial_node = self.current_node
+        print("PLAY ONE MOVE")
         for i in range(iterations):                                            # HERE WE DEFINE ITERATIONS PER TURN !!!!
             self.current_node = initial_node
             self.current_node.state.copy(initial_state)
             self.play()
+        print("PLAYED ONE MOVE")
         self.current_node = initial_node
         self.current_node.state.copy(initial_state)
         if (dataset != None):
@@ -216,27 +220,25 @@ class MCTS():
 
     def human_play_one_move(self):
         if self.current_node.state.victory is '':
-            to_play = None
-            while to_play == None:
+            while True:
                 to_play = input("What should be your next move ?\n")
                 if to_play == "cheat":
                     self.tree.print_n_floor(self.current_node, limit=0)
                     to_play = None
+                elif to_play == "exit":
+                    return None
                 else:
-                    try:
-                        to_play = int(to_play)
-                        if to_play < 0 or to_play > 6:
-                            to_play = None
-                        elif self.current_node.state.board[0, to_play] != " ":
-                            to_play = None
-                            print("Invalid move")
-                    except:
-                        to_play = input("Exit game? [y/n]\n")
-                        if to_play == "y":
-                            return
+                    try:    
+                        if int(to_play) in self.current_node.state.actions():
+                            to_play = int(to_play)
+                            self.play_action(to_play)
+                            break
+                            return True
                         else:
-                            to_play = None
-            self.play_action(to_play)
+                            print("Invalid move.")
+                    except:
+                        print("I didn't get that.")
+        return True
 
     def play_vs_MCTS(self):
         self.current_node = self.tree.root
@@ -252,7 +254,8 @@ class MCTS():
         while self.current_node.state.victory is '':
             self.current_node.state.display()
             if self.current_node.state.player == play_as:
-                self.human_play_one_move()
+                if self.human_play_one_move() == None:
+                    return
             else:
                 self.self_play_one_move_time()
             self.tree.print_n_floor(self.current_node.daddy, limit=0)
