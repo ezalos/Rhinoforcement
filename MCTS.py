@@ -44,7 +44,7 @@ class MCTS():
 
         if (node.is_fully_expanded == False and node.P == None):  #first visit
             #v = self.rollout_policy()
-            v = self.simulate()
+            v = self.simulate()#Random choice
             node.P = 1 #cheat
             node.visits += 1
             node.total_reward += v
@@ -54,7 +54,7 @@ class MCTS():
             self.expand_current_node()
 
         #action = self.tree_policy()
-        action = self.select()
+        action = self.select()#PUCT
         self.play_action(action)
         v = self.MCTS_to_reward()
 
@@ -64,6 +64,8 @@ class MCTS():
 
     def self_play(self, dataset = dataset(), iterations = 50): # DIRICHELET NMOISE
         if (self.root.is_terminal):
+            self.root.state.display()
+            print("HELLO: ", self.root.state.get_reward())
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
 
@@ -85,11 +87,13 @@ class MCTS():
         self.root = self.current_node
         self.root.state.display()
         v = self.self_play(dataset)
-        dataset.data[dataset_index] = v
+        dataset.data[dataset_index].V = np.array([v])
         return -v
 
     def self_play_new_game(self):
         self.root = self.tree_root
+        self.tree_root.display()
+        print("IS TERMINAL: ", self.tree_root.is_terminal, ":(")
         self.current_node = self.root
         self.current_node.state.reset()
         self.self_play(self.dataset)
@@ -104,7 +108,7 @@ class MCTS():
         for action in self.root.actions:
             policy[action] = self.root.children.get(action).visits
         policy = policy / sum(policy)
-        if (self.root.state.turn < 25): #DEFINE here
+        if (self.root.state.turn < 42): #DEFINE here
             temperature = 1
         else:
             temperature = 0.1
@@ -183,7 +187,8 @@ class MCTS():
         return (best_action)
 
     def select(self):
-        return (self.current_node.PUCT(self.dnn))
+        #return (self.current_node.PUCT(self.dnn))
+        return (self.select_highest_UCB1())
 
     def select_greedy(self):
         '''

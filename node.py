@@ -18,7 +18,7 @@ class node():
         self.P = None
         self.actions = self.state.actions()
         self.is_fully_expanded = (len(self.actions) == len(self.children))
-        self.is_terminal = (self.state.victory != '') # or (len(self.actions) == 0)
+        self.is_terminal = 1 if (self.state.victory != '') else 0# or (len(self.actions) == 0)
 
     def expand(self):
         '''

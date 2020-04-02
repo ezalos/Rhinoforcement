@@ -112,7 +112,7 @@ class state():
 
     def get_reward(self):
         '''
-            returns 1, 0 or -1 depending on the winner
+            returns 1, 0 or -1 depending on the winner #LOUIS
             assumes self.victory has been updated (done everytime we drop_piece)
         '''
         if self.victory == ".":
@@ -120,7 +120,7 @@ class state():
         elif self.victory == "X":
             return (1)
         elif self.victory == "O":
-            return (-1)
+            return (1)
         else:
             return None
 
