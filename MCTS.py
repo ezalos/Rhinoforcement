@@ -4,6 +4,7 @@ import copy
 import random
 import time
 from color import *
+from deep import Deep_Neural_Net
 import numpy
 from data import dataset
 from data import datapoint
@@ -29,6 +30,7 @@ class MCTS():
             self.rollout_policy = rollout_policy
         else:
             self.rollout_policy = lambda : self.simulate()
+        self.dnn = Deep_Neural_Net()
 
     def MCTS_to_reward(self):
         node = self.current_node
@@ -180,7 +182,7 @@ class MCTS():
         return (best_action)
 
     def select(self):
-        return (self.select_UCB1_policy())
+        return (self.current_node.PUCT(self.dnn))
 
     def select_greedy(self):
         '''
@@ -224,17 +226,17 @@ class MCTS():
     def backpropagate_old(self, cacahuetas, node = None):
         if (node == None):
             node = self.current_node
-        if node.state.player == "0" :
+        if node.state.player == "O" :
             cacahuetas = (-cacahuetas)
         while node is not None:
             node.total_reward += cacahuetas
             node.visits += 1
             cacahuetas = (-cacahuetas)
             node = node.daddy
-
-    def backpropagate(self, cacahuetas):
+    
+    def backpropagate_joep(self, cacahuetas):
         node = self.current_node
-        if node.state.player == "0" :
+        if node.state.player == "O" :
             cacahuetas = (-cacahuetas)
         while (node != self.tree.current_root):
             node.total_reward += cacahuetas
@@ -243,6 +245,18 @@ class MCTS():
             node = node.daddy
         node.total_reward += cacahuetas
         node.visits += 1
+
+    def backpropagate(self, cacahuetas):
+        node = self.current_node
+        turn = node.state.turn
+        while node is not None:
+            if turn % 2 == 1:
+                node.total_reward += cacahuetas 
+            else:
+                node.total_reward -= cacahuetas
+            node.visits += 1
+            turn -= 1
+            node = node.daddy
 
     def play(self):
         '''
@@ -286,32 +300,31 @@ class MCTS():
         self.current_node.state.reset()
         while (self.current_node.state.victory is ''):
             self.self_play_one_move(dataset)
+            self.current_node.state.display()
         if (dataset != None):
             dataset.add_value_to_set(self.current_node.state.get_reward(), self.current_node)
 
     def human_play_one_move(self):
         if self.current_node.state.victory is '':
-            to_play = None
-            while to_play == None:
+            while True:
                 to_play = input("What should be your next move ?\n")
                 if to_play == "cheat":
                     self.tree.print_n_floor(self.current_node, limit=0)
                     to_play = None
+                elif to_play == "exit":
+                    return None
                 else:
-                    try:
-                        to_play = int(to_play)
-                        if to_play < 0 or to_play > 6:
-                            to_play = None
-                        elif self.current_node.state.board[0, to_play] != " ":
-                            to_play = None
-                            print("Invalid move")
-                    except:
-                        to_play = input("Exit game? [y/n]\n")
-                        if to_play == "y":
-                            return
+                    try:    
+                        if int(to_play) in self.current_node.state.actions():
+                            to_play = int(to_play)
+                            self.play_action(to_play)
+                            break
+                            return True
                         else:
-                            to_play = None
-            self.play_action(to_play)
+                            print("Invalid move.")
+                    except:
+                        print("I didn't get that.")
+        return True
 
     def play_vs_MCTS(self):
         self.current_node = self.tree.root
@@ -327,7 +340,8 @@ class MCTS():
         while self.current_node.state.victory is '':
             self.current_node.state.display()
             if self.current_node.state.player == play_as:
-                self.human_play_one_move()
+                if self.human_play_one_move() == None:
+                    return
             else:
                 self.self_play_one_move_time()
             self.tree.print_n_floor(self.current_node.daddy, limit=0)

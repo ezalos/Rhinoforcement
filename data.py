@@ -9,6 +9,13 @@ class datapoint():
         self.P = policy                    #numpy array
         self.V = value                     #scalar
 
+    def display(self):
+        print("State: ")
+        self.S.display()
+        print("Policy: ", self.P)
+        print("Value: ", self.V)
+        print("")
+
 class dataset():
     def __init__(self):
         self.data = []
@@ -28,6 +35,11 @@ class dataset():
 
     def add_value_to_set(self, value, last_node): #if 1 game = 1 dataset then this is needlessly complicated
         i = 1
-        while (last_node != None): #should be no need for +1 as final state will not be included in set
-            self.data[-i].V = value
+        while (last_node.daddy != None): #should be no need for +1 as final state will not be included in set
+            self.data[-i].V = np.array([value])
             last_node = last_node.daddy
+            i += 1
+
+    def display(self):
+        for data in self.data:
+            data.display()
