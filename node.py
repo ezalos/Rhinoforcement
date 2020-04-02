@@ -1,4 +1,5 @@
 from state import state
+from deep import Deep_Neural_Net
 import random
 import math
 import copy
@@ -11,6 +12,7 @@ class node():
         self.visits = 0
         self.total_reward = 0
         self.children = {}
+        self.P = None
         self.actions = self.state.actions()
         self.is_fully_expanded = False #TO UPDATE
         if (self.state == None):
@@ -53,12 +55,31 @@ class node():
         '''
         if (self.visits == 0):
             return (1234) #arbitrary big number here
-        sqrt_log_of_visits = math.sqrt(math.log(self.daddy.visits) / self.visits)
-        reward_visits = (self.total_reward / self.visits)
         c_explo = math.sqrt(2)
-        #c_explo = 2
-        result = reward_visits + c_explo * sqrt_log_of_visits
-        return result
+        return ((self.total_reward / self.visits) + c_explo * math.sqrt(math.log(self.daddy.visits) / self.visits))
+
+    def PUCT(self, DNN):
+        PUCT = []
+        C = 1
+        #DNN = Deep_Neural_Net()
+        DNN.convert_state(self.state)
+        DNN.run()
+        for act in self.actions:
+            child = self.children.get(act)
+            if child != None:
+                Q = child.total_reward / (1 + child.visits) #should be this
+                Q = child.total_reward #but this seems better
+                if self.P == None:
+                    self.P = DNN.policy[act]
+                N = math.sqrt(self.visits) / (1 + child.visits)
+                PUCT.append([Q + (C * self.P * N), act])
+        best_puct = -1234567890
+        pos = -1
+        for i in range(len(PUCT)):
+            if PUCT[i][0] > best_puct:
+                best_puct = PUCT[i][0]
+                pos = PUCT[i][1]
+        return pos
 
     def winrate(self):
         return (self.total_reward / self.visits)
