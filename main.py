@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/04/02 13:45:15 by ezalos           ###   ########.fr        #
+#    Updated: 2020/04/02 16:09:26 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -39,7 +39,8 @@ def save_state(s_object, file_name = cache):
     print("Save cache in ", file_name)
     with open(file_name, 'wb') as my_cache:
         pickle.dump(s_object, my_cache)
-        print("Successful, tree size = ", s_object.size)
+        if (type(s_object) == type(MCTS())):
+            print("Successful, tree size = ", s_object.size)
 
 def dirty_save(s_object, file_name):
     pickle.dump(s_object, open(file_name, 'wb'))
@@ -49,7 +50,8 @@ def load_state(file_name = cache):
     print("Load cache from ", file_name)
     with open(file_name, 'rb') as my_cache:
         my_obj = pickle.load(my_cache)
-    print("Successful, tree size = ", my_obj.size)
+    if (type(my_obj) == type(MCTS())):
+        print("Successful, tree size = ", my_obj.size)
     return my_obj
 
 def one_turn(my_board):
@@ -88,9 +90,17 @@ if __name__ == "__main__":
     try:
         jo = load_state()
     except:
+        print("New MCTS")
         jo = MCTS()
-    iterations = 2
-    dataset = dataset()
+    iterations = 1
+    try:
+        dataset = load_state("cache_dataset")
+        for data in dataset.data:
+            jo.dnn.train(data)
+        dataset.data = []
+    except:
+        print("New dataset")
+        dataset = dataset()
     print("How much times ", iterations, " should be run ?")
     how = input()
     try:
@@ -99,9 +109,17 @@ if __name__ == "__main__":
         how = 0
     k = 0
     while k < how:
+        save_dnn = jo.dnn
+        jo = MCTS()
+        jo.dnn = save_dnn
         for i in ft_progress(range(iterations)):
             jo.self_play_one_game(dataset)
         jo.display()
+        save_state(dataset, "cache_dataset")
+        for data in dataset.data:
+            jo.dnn.train(data)
+        dataset.data = []
         save_state(jo, cache)
+
         k += 1
 #    jo.play_vs_MCTS()

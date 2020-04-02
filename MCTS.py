@@ -133,17 +133,17 @@ class MCTS():
     def backpropagate_old(self, cacahuetas, node = None):
         if (node == None):
             node = self.current_node
-        if node.state.player == "0" :
+        if node.state.player == "O" :
             cacahuetas = (-cacahuetas)
         while node is not None:
             node.total_reward += cacahuetas
             node.visits += 1
             cacahuetas = (-cacahuetas)
             node = node.daddy
-
-    def backpropagate(self, cacahuetas):
+    
+    def backpropagate_joep(self, cacahuetas):
         node = self.current_node
-        if node.state.player == "0" :
+        if node.state.player == "O" :
             cacahuetas = (-cacahuetas)
         while (node != self.tree.current_root):
             node.total_reward += cacahuetas
@@ -152,6 +152,18 @@ class MCTS():
             node = node.daddy
         node.total_reward += cacahuetas
         node.visits += 1
+
+    def backpropagate(self, cacahuetas):
+        node = self.current_node
+        turn = node.state.turn
+        while node is not None:
+            if turn % 2 == 1:
+                node.total_reward += cacahuetas 
+            else:
+                node.total_reward -= cacahuetas
+            node.visits += 1
+            turn -= 1
+            node = node.daddy
 
     def play(self):
         '''
@@ -213,6 +225,7 @@ class MCTS():
         self.current_node.state.reset()
         while (self.current_node.state.victory is ''):
             self.self_play_one_move(dataset)
+            self.current_node.state.display()
         if (dataset != None):
             dataset.add_value_to_set(self.current_node.state.get_reward(), self.current_node)
 

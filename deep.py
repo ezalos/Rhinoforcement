@@ -123,17 +123,25 @@ class Deep_Neural_Net():
         self.value = value.item()
         return policy, value
 
-    def train(self, state, value, policy):
-        self.convert_state(state.encode_board())
-        value = torch.from_numpy(value).float()
-        policy = torch.from_numpy(policy).float()
+    def train(self, data):
+        print("\n\nTRAINING DNN")
+        data.display()
+        self.convert_state(data.S)
+        value = torch.from_numpy(data.V).float()
+        policy = torch.from_numpy(data.P).float()
 
         policy_pred, value_pred = self.run()
         
+        print("V:    ", value)
+        print("V_y:  ", value_pred)
+        print("P:    ", policy)
+        print("P_y:  ", policy_pred)
+
         criterion = AlphaLoss()
         loss = criterion(value_pred[:,0], value, policy_pred, policy)
-        loss = loss/args.gradient_acc_steps
+        #loss = loss/args.gradient_acc_steps
         loss.backward()
+        print("loss: ", loss)
         #if (epoch % args.gradient_acc_steps) == 0:
         #    optimizer.step()
         #    optimizer.zero_grad()

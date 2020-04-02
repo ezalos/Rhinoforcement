@@ -12,6 +12,7 @@ class node():
         self.visits = 0
         self.total_reward = 0
         self.children = {}
+        self.P = None
         self.actions = self.state.actions()
         self.is_fully_expanded = False #TO UPDATE
         if (self.state == None):
@@ -66,10 +67,12 @@ class node():
         for act in self.actions:
             child = self.children.get(act)
             if child != None:
-                Q = child.total_reward
-                P = DNN.policy[act]
+                Q = child.total_reward / (1 + child.visits) #should be this
+                Q = child.total_reward #but this seems better
+                if self.P == None:
+                    self.P = DNN.policy[act]
                 N = math.sqrt(self.visits) / (1 + child.visits)
-                PUCT.append([Q + (C * P * N), act])
+                PUCT.append([Q + (C * self.P * N), act])
         best_puct = -1234567890
         pos = -1
         for i in range(len(PUCT)):
