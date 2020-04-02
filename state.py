@@ -18,6 +18,9 @@ class state():
         self.turn = 0
         self.victory = ''
 
+    def do_action(self, action):
+        self.drop_piece(action)
+
     def drop_piece(self, column):
         if self.victory != '' :
             print("Game Over")

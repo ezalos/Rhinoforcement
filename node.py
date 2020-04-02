@@ -6,26 +6,17 @@ from color import *
 
 class node():
     def __init__(self, state = state(), parent = None):
-        self.state = state # WE CAN REMOVE THE STATE AS THE PATH HOLDS IT !!!
+        self.state = state
         self.daddy = parent
         self.visits = 0
         self.total_reward = 0
+        self.player = self.state.player
+        self.Q = None
+        self.P = None
         self.children = {}
         self.actions = self.state.actions()
-        self.is_fully_expanded = False #TO UPDATE
-        if (self.state == None):
-            self.state = state()
-
-    def add_child(self, action, child = None):
-        '''
-            adds existing node to the children dictionary of self. (with action as its key)
-            if no node is given as argument, will create new node instance (sharing ref to board)
-        '''
-        if (child == None):
-            child = node(self.state, self)
-        self.children[action] = child
-        if len(self.actions) == len(self.children):
-            self.is_fully_expanded = True
+        self.is_fully_expanded = (len(self.actions) == len(self.children))
+        self.is_terminal = (self.state.victory != '') # or (len(self.actions) == 0)
 
     def expand(self):
         '''
@@ -46,6 +37,15 @@ class node():
             count += 1
         self.is_fully_expanded = True
         return (count)
+
+    def do_action(self, action):
+        '''
+            returns the child node corresponding to the action
+        '''
+        self.state.do_action(action)
+        ret = self.children.get(action)
+        if (ret == None):
+            print("trying to access a non existing node THIS SHOULD NEVER PRINT")
 
     def UCB1(self):
         '''
@@ -95,3 +95,38 @@ class node():
         print(self.total_reward, "/", self.visits, end="")
         print(" " * (max_nb_size - len(str(self.visits))), end="")
         print("=", str(self.UCB1())[:7], RESET, end="")
+
+    def print_n_floor(self, limit=1, deepness=0):
+        max = len(str(self.visits))
+        best_UCB1 = -100000000000
+        best_action = -1 #quick fix
+        for action in self.actions :
+            danger = self.children.get(action)
+            if danger != None:
+                new_UCB1 = danger.UCB1()
+                if (new_UCB1 > best_UCB1):
+                    best_UCB1 = new_UCB1
+                    best_action = action
+        for act in self.actions:
+            child = self.children.get(act)
+            if deepness < 2 or act == self.actions[0]:
+                print("    " * deepness, end="")
+            if act == best_action:
+                print(UNDERLINE, end="")
+            if deepness % 2 == 1:
+                print(BLUE, end="")
+            else:
+                print(RED, end="")
+            print(act, "-->", end="")
+            if (child != None):
+                child.display(max)
+                if deepness < 2:
+                    print("")
+                elif act != self.state.actions()[-1]:
+                    print(" | ", end="")
+                if deepness < limit:
+                    self.print_n_floor(child, limit, deepness + 1)
+            else:
+                print("  NONE", RESET)
+        if deepness >= 2:
+            print("")
