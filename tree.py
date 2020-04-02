@@ -30,7 +30,7 @@ class tree():
                     best_action = action
         for act in node.actions:
             child = node.children.get(act)
-            if deepness < 2 or act == node.state.actions()[0]:
+            if deepness < 2 or act == node.actions[0]:
                 print("    " * deepness, end="")
             if act == best_action:
                 print(UNDERLINE, end="")
@@ -43,7 +43,7 @@ class tree():
                 child.display(max)
                 if deepness < 2:
                     print("")
-                elif act != node.state.actions()[-1]:
+                elif act != node.actions[-1]:
                     print(" | ", end="")
                 if deepness < limit:
                     self.print_n_floor(child, limit, deepness + 1)
