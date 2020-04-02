@@ -129,4 +129,7 @@ if __name__ == "__main__":
 #        k += 1
 #    jo.play_vs_MCTS()
     jo = MCTS()
-    jo.self_play_new_game()
+    for _ in range(100):
+        jo.self_play_new_game()
+        jo.current_node.state.display()
+        jo.tree_root.print_n_floor()

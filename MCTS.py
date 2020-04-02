@@ -88,6 +88,7 @@ class MCTS():
     def self_play_new_game(self):
         self.root = self.tree_root
         self.current_node = self.root
+        self.current_node.state.reset()
         self.self_play(self.dataset)
     
     def policy_policy(self):
@@ -179,7 +180,7 @@ class MCTS():
         return (best_action)
 
     def select(self):
-        return (self.select_highest_UCB1())
+        return (self.select_UCB1_policy())
 
     def select_greedy(self):
         '''
