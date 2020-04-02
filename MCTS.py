@@ -159,10 +159,12 @@ class MCTS():
         '''
         initial_state = copy.deepcopy(self.current_node.state)
         initial_node = self.current_node
+        print("PLAY ONE MOVE")
         for i in range(iterations):                                            # HERE WE DEFINE ITERATIONS PER TURN !!!!
             self.current_node = initial_node
             self.current_node.state.copy(initial_state)
             self.play()
+        print("PLAYED ONE MOVE")
         self.current_node = initial_node
         self.current_node.state.copy(initial_state)
         self.play_action(self.select_most_visits())
