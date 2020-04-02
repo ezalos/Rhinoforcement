@@ -112,7 +112,7 @@ class Deep_Neural_Net():
         self.value = None
     
     def convert_state(self, state):
-        encoded_s = state.encode_board(board);
+        encoded_s = state.encode_board();
         encoded_s = encoded_s.transpose(2,0,1)
         encoded_s = torch.from_numpy(encoded_s).float()#.cuda()
         self.encoded_state = encoded_s

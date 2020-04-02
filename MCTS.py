@@ -4,6 +4,7 @@ import copy
 import random
 import time
 from color import *
+from deep import Deep_Neural_Net
 import numpy
 
 class MCTS():
@@ -13,6 +14,7 @@ class MCTS():
         self.tree = tree
         self.current_node = self.tree.root
         self.size = 0
+        self.dnn = Deep_Neural_Net()
 
     def default_policy(self):
         pass
@@ -61,7 +63,7 @@ class MCTS():
         return (best_action)
 
     def select(self):
-        return (self.select_UCB1_policy())
+        return (self.current_node.PUCT(self.dnn))
 
     def select_greedy(self):
         '''

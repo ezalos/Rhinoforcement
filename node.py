@@ -61,20 +61,26 @@ class node():
         result = reward_visits + c_explo * sqrt_log_of_visits
         return result
 
-    def PUCB(self):
-        PUCB = []
-        C_explo = 1
-        DNN = Deep_Neural_Net()
-        DNN.convert_state(state)
+    def PUCT(self, DNN):
+        PUCT = []
+        C = 1
+        #DNN = Deep_Neural_Net()
+        DNN.convert_state(self.state)
         DNN.run()
         for act in self.actions:
             child = self.children.get(act)
-            if child != None and child.visits != 0:
+            if child != None:
                 Q = child.total_reward
                 P = DNN.policy[act]
-                N = math.sqrt(self.visits) / child.visits
-                PUCB.append(Q + (C_explo * P * N))
-        return PUCB
+                N = math.sqrt(self.visits) / (1 + child.visits)
+                PUCT.append(Q + (C * P * N))
+        best_puct = -1234567890
+        pos = -1
+        for i in range(len(PUCT)):
+            if PUCT[i] > best_puct:
+                best_puct = PUCT[i]
+                pos = i
+        return pos
 
     def winrate(self):
         return (self.total_reward / self.visits)
