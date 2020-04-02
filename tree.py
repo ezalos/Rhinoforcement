@@ -12,6 +12,7 @@ class tree():
     
     def __init__(self):
         self.root = node()
+        self.current_root = self.root 
         #self.hash = [{}] * 43
         #self.hash[0][self.root.state.stringify()] = self.root
 

@@ -54,12 +54,8 @@ class node():
         '''
         if (self.visits == 0):
             return (1234) #arbitrary big number here
-        sqrt_log_of_visits = math.sqrt(math.log(self.daddy.visits) / self.visits)
-        reward_visits = (self.total_reward / self.visits)
         c_explo = math.sqrt(2)
-        #c_explo = 2
-        result = reward_visits + c_explo * sqrt_log_of_visits
-        return result
+        return ((self.total_reward / self.visits) + c_explo * math.sqrt(math.log(self.daddy.visits) / self.visits))
 
     def PUCT(self, DNN):
         PUCT = []

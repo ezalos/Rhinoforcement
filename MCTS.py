@@ -6,6 +6,9 @@ import time
 from color import *
 from deep import Deep_Neural_Net
 import numpy
+from data import dataset
+from data import datapoint
+
 
 class MCTS():
 
@@ -51,7 +54,6 @@ class MCTS():
         '''
         best_action = self.current_node.actions[0]
         best_UCB1 = self.current_node.children.get(best_action).UCB1()
-        new_UCB1 = 0
         for action in self.current_node.actions :
             new_UCB1 = self.current_node.children.get(action).UCB1()
             if (new_UCB1 > best_UCB1):
@@ -128,7 +130,9 @@ class MCTS():
             state.drop_piece(play)
         return (state.get_reward())
 
-    def backpropagate(self, node, cacahuetas):
+    def backpropagate_old(self, cacahuetas, node = None):
+        if (node == None):
+            node = self.current_node
         if node.state.player == "0" :
             cacahuetas = (-cacahuetas)
         while node is not None:
@@ -137,23 +141,35 @@ class MCTS():
             cacahuetas = (-cacahuetas)
             node = node.daddy
 
+    def backpropagate(self, cacahuetas):
+        node = self.current_node
+        if node.state.player == "0" :
+            cacahuetas = (-cacahuetas)
+        while (node != self.tree.current_root):
+            node.total_reward += cacahuetas
+            node.visits += 1
+            cacahuetas = (-cacahuetas)
+            node = node.daddy
+        node.total_reward += cacahuetas
+        node.visits += 1
+
     def play(self):
         '''
             Plays from current node to loss or victory and backpropagates the result
         '''
         self.selection()
         if (self.current_node.state.victory != ''):
-            self.backpropagate(self.current_node, self.current_node.state.get_reward())
+            self.backpropagate(self.current_node.state.get_reward())
         else:
             if (self.current_node.visits == 0):
-                self.backpropagate(self.current_node, self.simulate())
+                self.backpropagate(self.simulate())
             elif (self.current_node.is_fully_expanded == False):
                 self.expand()
                 actions = self.current_node.actions
                 self.play_action(actions[random.randint(0, len(actions) - 1)]) #implement winning move here !
-                self.backpropagate(self.current_node, self.simulate())
+                self.backpropagate(self.simulate())
 
-    def self_play_one_move(self, iterations = 400):
+    def self_play_one_move(self, dataset = None, iterations = 400):
         '''
             runs many games from current_node, chooses a move the plays it.
         '''
@@ -165,8 +181,11 @@ class MCTS():
             self.play()
         self.current_node = initial_node
         self.current_node.state.copy(initial_state)
-        self.play_action(self.select_most_visits())
-        self.current_node.state.display()
+        if (dataset != None):
+            dataset.add_point(self.current_node)
+        chosen_action = self.select_most_visits()
+        self.play_action(chosen_action)
+        self.tree.current_root = self.current_node
 
     def self_play_one_move_time(self, time_per_move = 1):
         '''
@@ -181,16 +200,21 @@ class MCTS():
             self.play()
         self.current_node = initial_node
         self.current_node.state.copy(initial_state)
-        self.play_action(self.select_most_visits())
+        chosen_action = self.select_most_visits()
+        self.play_action(chosen_action)
+        self.tree.current_root = self.current_node
 
-    def self_play_one_game(self):
+    def self_play_one_game(self, dataset = None):
         '''
             resets current node and state then plays a game vs itself
         '''
         self.current_node = self.tree.root
+        self.tree.current_root = self.tree.root
         self.current_node.state.reset()
         while (self.current_node.state.victory is ''):
-            self.self_play_one_move(400)
+            self.self_play_one_move(dataset)
+        if (dataset != None):
+            dataset.add_value_to_set(self.current_node.state.get_reward(), self.current_node)
 
     def human_play_one_move(self):
         if self.current_node.state.victory is '':
