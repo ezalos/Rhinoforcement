@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/03/31 18:15:28 by ezalos           ###   ########.fr        #
+#    Updated: 2020/04/02 12:53:38 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,34 +28,9 @@ import pickle
 
 import sys
 from time import sleep
+from listy import ft_progress
 import time
 
-start_time = time.time()
-
-def truncate(f, n):
-    '''Truncates/pads a float f to n decimal places without rounding'''
-    s = '{}'.format(f)
-    if 'e' in s or 'E' in s:
-        return '{0:.{1}f}'.format(f, n)
-    i, p, d = s.partition('.')
-    return '.'.join([i, (d+'0'*n)[:n]])
-
-def ft_progress(listy):
-    total = len(listy)
-    unit = int(total / 20)
-    for i in listy:
-        if (i == 0):
-            start_time = time.time()
-        elapsed_time = ((time.time()) - (start_time))
-        eta = ((elapsed_time) * (total - i) / (i + 1))
-        print("ETA: ", ' ' if (eta // 10) < 1 else '', str(truncate(eta, 2)) + "s ",
-        "[ " if i < (total // 10) else "[", str((((i + 1) * 100)// total)) + '%' + ']' +
-        '[' + (i // unit) * '=' + '>' + ((total - i - 1) // unit) * ' ' + '] ' +
-        str(i + 1) + '/' + str(total) +
-        " | elapsed time " + str(truncate(elapsed_time, 2)) + "s  ",
-        end="\r")
-        yield i
-    print("")
 
 cache = "cache_MCTS_Tree"
 
@@ -120,7 +95,7 @@ if __name__ == "__main__":
         jo = load_state()
     except:
         jo = MCTS()
-    iterations = 25
+    iterations = 2
     print("How much times ", iterations, " should be run ?")
     how = input()
     try:

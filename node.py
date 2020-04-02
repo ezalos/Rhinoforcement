@@ -73,13 +73,13 @@ class node():
                 Q = child.total_reward
                 P = DNN.policy[act]
                 N = math.sqrt(self.visits) / (1 + child.visits)
-                PUCT.append(Q + (C * P * N))
+                PUCT.append([Q + (C * P * N), act])
         best_puct = -1234567890
         pos = -1
         for i in range(len(PUCT)):
-            if PUCT[i] > best_puct:
-                best_puct = PUCT[i]
-                pos = i
+            if PUCT[i][0] > best_puct:
+                best_puct = PUCT[i][0]
+                pos = PUCT[i][1]
         return pos
 
     def winrate(self):

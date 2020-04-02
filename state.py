@@ -23,7 +23,7 @@ class state():
             print("Game Over")
         elif self.board[0, column] != " ":
             print("Invalid move")
-            print(row)
+            print(column)
         else:
             row = MAX_ROWS - 1
             while " " != self.board[row, column]:
@@ -182,9 +182,9 @@ class state():
         move = self.last_move
         print("Turn", YELLOW, self.turn, RESET, "for ", end="")
         if self.player == "X":
-            print(RED + 'X' + RESET, end="")
-        else:
             print(BLUE + 'O' + RESET, end="")
+        else:
+            print(RED + 'X' + RESET, end="")
         print("")
         for rows in range(MAX_ROWS):
             for cols in range(MAX_COLS):
