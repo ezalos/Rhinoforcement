@@ -96,7 +96,9 @@ class node():
         print(" " * (max_nb_size - len(str(self.visits))), end="")
         print("=", str(self.UCB1())[:7], RESET, end="")
 
-    def print_n_floor(self, limit=1, deepness=0):
+    def print_n_floor(self, node = None, limit=1, deepness=0):
+        if node == None:
+            node = self
         max = len(str(self.visits))
         best_UCB1 = -100000000000
         best_action = -1 #quick fix

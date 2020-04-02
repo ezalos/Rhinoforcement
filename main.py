@@ -108,23 +108,25 @@ def time_one_game(self, jo):
     print(time.time() - start)
 
 if __name__ == "__main__":
-    try:
-        jo = load_state()
-    except:
-        jo = MCTS()
-    dataset = dataset()
-    iterations = 25
-    print("How much times ", iterations, " should be run ?")
-    how = input()
-    try:
-        how = int(how)
-    except:
-        how = 0
-    k = 0
-    while k < how:
-        for i in ft_progress(range(iterations)):
-            jo.self_play_one_game(dataset)
-        jo.display()
-        save_state(jo, cache)
-        k += 1
+#    try:
+#        jo = load_state()
+#    except:
+#        jo = MCTS()
+#    dataset = dataset()
+#    iterations = 25
+#    print("How much times ", iterations, " should be run ?")
+#    how = input()
+#    try:
+#        how = int(how)
+#    except:
+#        how = 0
+#    k = 0
+#    while k < how:
+#        for i in ft_progress(range(iterations)):
+#            jo.self_play_one_game(dataset)
+#        jo.display()
+#        save_state(jo, cache)
+#        k += 1
 #    jo.play_vs_MCTS()
+    jo = MCTS()
+    jo.self_play_new_game()
