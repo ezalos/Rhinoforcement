@@ -31,7 +31,7 @@ class node():
         last_move_tmp = copy.deepcopy(self.state.last_move)
         victory_tmp = copy.copy(self.state.victory) #undeep check
         for act in self.actions:
-            self.state.drop_piece(act)
+            self.state.do_action(act)
             child = node(self.state, self)
             self.children[act] = child
             self.state.undrop_piece()
@@ -80,41 +80,7 @@ class node():
                 best_puct = PUCT[i][0]
                 pos = PUCT[i][1]
         return pos
-
-    def winrate(self):
-        return (self.total_reward / self.visits)
-    
-    def unexplored_actions(self):
-        unexplored_moves = []
-        for a in self.actions :
-            if (self.children.get(a) == None):
-                unexplored_moves.append(a)
-        return (unexplored_moves)
-
-    def random_unexplored_action(self):
-        act = self.unexplored_actions()
-        return (act[random.randint(0, len(act) - 1)])
-
-    def play_move_keep_board(self, action):
-        '''
-            will do the action and pass a pointer/reference to the board to the corresponding
-            child node. The child node will be created if necessary
-        '''
-        existing_child = self.children.get(action)
-        self.state.drop_piece(action)
-        if (existing_child == None):
-            self.children[action] = node(self.state, self)
-            if (len(self.children) == len(self.actions)):
-                self.is_fully_expanded = True
-        else:
-            self.children.get(action).state = self.state
-
-    def create_child_keep_board(self, action):
-        self.state.drop_piece(action)
-        self.children[action] = node(self.state, self)
-        if (len(self.children) == len(self.actions)):
-            self.is_fully_expanded = True
-                
+ 
     def display(self, max_nb_size = 5):
         print(" " * (max_nb_size - len(str(self.total_reward))), end="")
         print(self.total_reward, "/", self.visits, end="")

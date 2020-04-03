@@ -18,10 +18,10 @@ class state():
         self.turn = 0
         self.victory = ''
 
-    def do_action(self, action):
-        self.drop_piece(action)
-
-    def drop_piece(self, column):
+    def do_action(self, column):
+        '''
+            changes player, turn and victory
+        '''
         if self.victory != '' :
             print("Game Over")
         elif self.board[0, column] != " ":
@@ -123,9 +123,6 @@ class state():
         else:
             return None
 
-    def stringify(self):
-        return (self.board.tostring())
-    
     def actions(self):
         '''
             returns array of possible actions
@@ -146,6 +143,9 @@ class state():
                 self.board[row][col] = " "
 
     def copy(self, other):
+        '''
+            copies all attributes of other into self
+        '''
         self.player = other.player
         self.last_move[0] = other.last_move[0]
         self.last_move[1] = other.last_move[1]
