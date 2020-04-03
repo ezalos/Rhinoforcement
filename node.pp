@@ -1,5 +1,4 @@
 from state import state
-from deep import Deep_Neural_Net
 import random
 import math
 import copy
