@@ -4,7 +4,7 @@ import numpy as np
 import copy
 
 class datapoint():
-    def __init__(self, state, policy, value = -2):
+    def __init__(self, state, policy, value = None):
         self.S = copy.deepcopy(state)      #unmodified state
         self.P = policy                    #numpy array
         self.V = value                     #scalar
@@ -19,6 +19,7 @@ class datapoint():
 class dataset():
     def __init__(self):
         self.data = []
+        #self.size = 0
 
     def make_policy_vector_from_node(self, node):
         out = np.zeros([7], dtype= float)
@@ -27,9 +28,10 @@ class dataset():
         out = out / np.sum(out)                                    #dunno untested 
         return (out)
 
-    def add_point(self, node):
-        self.data.append(datapoint(node.state, self.make_policy_vector_from_node(node)))
-
+    def add_point(self, state, policy):
+        self.data.append(datapoint(state, policy))
+        #self.size += 1
+        return (len(self.data) - 1)
 
     def add_value_to_set(self, value, last_node): #if 1 game = 1 dataset then this is needlessly complicated
         i = 1
@@ -39,5 +41,6 @@ class dataset():
             i += 1
 
     def display(self):
+        print(self.data)
         for data in self.data:
             data.display()

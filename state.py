@@ -18,6 +18,9 @@ class state():
         self.turn = 0
         self.victory = ''
 
+    def do_action(self, action):
+        self.drop_piece(action)
+
     def drop_piece(self, column):
         if self.victory != '' :
             print("Game Over")
@@ -109,7 +112,7 @@ class state():
 
     def get_reward(self):
         '''
-            returns 1, 0 or -1 depending on the winner
+            returns 1, 0 or -1 depending on the winner #LOUIS
             assumes self.victory has been updated (done everytime we drop_piece)
         '''
         if self.victory == ".":
@@ -117,7 +120,7 @@ class state():
         elif self.victory == "X":
             return (1)
         elif self.victory == "O":
-            return (-1)
+            return (1)
         else:
             return None
 

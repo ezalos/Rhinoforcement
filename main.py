@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/04/02 16:09:26 by ezalos           ###   ########.fr        #
+#    Updated: 2020/04/02 20:53:22 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,6 +16,7 @@ from datetime import datetime
 from time import sleep
 from state import state
 from MCTS import MCTS
+from node import node
 import random
 import copy
 
@@ -87,11 +88,11 @@ def time_one_game(self, jo):
     print(time.time() - start)
 
 if __name__ == "__main__":
-    try:
-        jo = load_state()
-    except:
-        print("New MCTS")
-        jo = MCTS()
+    #try:
+    #    jo = load_state()
+    #except:
+    #    print("New MCTS")
+    jo = MCTS()
     iterations = 1
     try:
         dataset = load_state("cache_dataset")
@@ -110,16 +111,22 @@ if __name__ == "__main__":
     k = 0
     while k < how:
         save_dnn = jo.dnn
-        jo = MCTS()
+        jo = MCTS(node(), dataset)
         jo.dnn = save_dnn
         for i in ft_progress(range(iterations)):
-            jo.self_play_one_game(dataset)
-        jo.display()
-        save_state(dataset, "cache_dataset")
-        for data in dataset.data:
-            jo.dnn.train(data)
-        dataset.data = []
-        save_state(jo, cache)
+            jo.self_play_new_game()
+        #jo.display()
+        #jo.dataset.display()
+        if 0:
+            save_state(dataset, "cache_dataset")
+            for data in jo.dataset.data:
+                jo.dnn.train(data)
+            jo.dataset.data = []
+        #save_state(jo, cache)
 
         k += 1
 #    jo.play_vs_MCTS()
+#    jo = MCTS()
+#    for _ in range(100):
+#        jo.current_node.state.display()
+#        jo.tree_root.print_n_floor()
