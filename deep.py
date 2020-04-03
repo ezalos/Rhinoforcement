@@ -5,7 +5,9 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 import matplotlib
 matplotlib.use("Agg")
-
+import torch.optim as optim
+from torch.utils.data import DataLoader
+from torch.nn.utils import clip_grad_norm_
 
 import numpy as np
 
@@ -123,32 +125,67 @@ class Deep_Neural_Net():
         self.value = value.item()
         return policy, value
 
-    def train(self, data):
-        print("\n\nTRAINING DNN")
-        data.display()
-        self.convert_state(data.S)
-        value = torch.from_numpy(data.V).float()
-        policy = torch.from_numpy(data.P).float()
-
-        policy_pred, value_pred = self.run()
-        
-        print("V:    ", value)
-        print("V_y:  ", value_pred)
-        print("P:    ", policy)
-        print("P_y:  ", policy_pred)
-
-        criterion = AlphaLoss()
-        loss = criterion(value_pred[:,0], value, policy_pred, policy)
-        #loss = loss/args.gradient_acc_steps
-        loss.backward()
-        print("loss: ", loss)
-        #if (epoch % args.gradient_acc_steps) == 0:
-        #    optimizer.step()
-        #    optimizer.zero_grad()
-        #total_loss += loss.item()
+#class Training():
+    def train(self, dataset, optimizer, scheduler, total_epoch):
+        update_size = len(train_loader)//10
+	criterion = AlphaLoss()
+	for epoch in range(total_epoch):
+	    total_loss = 0.0
+            losses_per_batch = []
+	    total_step = len(dataset.data)
+	    loss_list = []
+	    acc_list = []
+            for data, i in enumerate(dataset.data):#should be a fraction of data set of size batch_size
+                #Get data ready
+                print("\n\nTRAINING DNN")
+                data.display()
+                self.convert_state(data.S)
+                value = torch.from_numpy(data.V).float()
+                policy = torch.from_numpy(data.P).float()
 
 
 
+                #Run forward pass
+                policy_pred, value_pred = self.run()
+                print("V:    ", value)
+                print("V_y:  ", value_pred)
+                print("P:    ", policy)
+                print("P_y:  ", policy_pred)
+                loss = criterion(value_pred[:,0], value, policy_pred, policy)
+                    #loss = loss/args.gradient_acc_steps
+                    #print("loss: ", loss)
+                    #if (epoch % args.gradient_acc_steps) == 0:
+
+
+
+                #Backprop and perform Adam optimization
+                optimizer.zero_grad()#clears x.grad for every parameter x in the optimizer
+                loss.backward()#computes dloss/dx for every parameter x 
+                optimizer.step()#updates the value of x using the gradient x.grad
+
+
+		#Track numbers
+                total_loss += loss.item()#Loss is the sum of differencies for v & v_y
+        	total = labels.size(0)
+                _, predicted = torch.max(outputs.data, 1)
+                correct = (predicted == labels).sum().item()
+                acc_list.append(correct / total)#Accuracy is the % of good answers
+                if (i + 1) % batch_size == 0:
+                    print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                        .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
+                        (correct / total) * 100))
+
+            scheduler.step()#it change the learning rate
+
+    def big_train(self, dataset):
+        num_epochs = 5
+        num_classes = 10
+        batch_size = 100
+        learning_rate = 0.001
+        optimizer = optim.Adam(self.deep_neural_net.parameters(), lr=learning_rate, betas=(0.8, 0.999))
+        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50,100,150,200,250,300,400], gamma=0.77)
+        #start_epoch = load_state(net, optimizer, scheduler, args, iteration, new_optim_state)
+        self.train(dataset, optimizer, scheduler, num_epochs)
 
 
 
