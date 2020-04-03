@@ -100,6 +100,6 @@ if __name__ == "__main__":
         start = time.time()
         jo.self_play_new_game()
         jo.current_node.state.display()
-        jo.tree_root.print_n_floor()
+        jo.tree_root.print_n_floor(jo.tree_root, 0)
         print(time.time() - start)
     #save_state(jo.tree_root)

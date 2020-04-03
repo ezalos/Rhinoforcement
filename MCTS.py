@@ -11,6 +11,7 @@ from data import datapoint
 import numpy as np
 import sklearn
 
+DEBUG = 0
 class MCTS():
 
     def __init__(self, node = node(), dataset = dataset(), tree_policy = None, rollout_policy = None):
@@ -63,11 +64,12 @@ class MCTS():
             return -v
 
         if (node.is_fully_expanded):
-        #action = self.tree_policy()
+            #action = self.tree_policy()
             action = self.select()
             self.play_action(action)
             v = self.MCTS_to_reward()
-
+#            if (node.state.victory != ''):
+#                print("plya: ", node.player, "winna: ", node.state.victory, "V: ", v)
             node.visits += 1    #increase here or before PUCT evaluation ?
             node.total_reward += v
             return -v
@@ -76,12 +78,10 @@ class MCTS():
         node.state.display()
 
     def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
+        node = self.root
         if (self.root.is_terminal):
             print("TERMINAL")
             self.root.display()
-            nod = self.root
-            print()
-            print("visits: ", nod.visits, "reward: ", nod.total_reward)
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
 
@@ -93,18 +93,23 @@ class MCTS():
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
 
-#        policy = self.policy_policy()
-#        if (DEBUG > 2):
-#            print("policy", policy)
-#            print(dataset)
-#        dataset_index = dataset.add_point(state=self.root.state, policy=policy) # verify inDEX YOYOYO
-#        action = np.random.choice(7, 1, p=policy)[0]
+        policy = self.policy_policy() ## IS FUKED UPO
+        dataset_index = dataset.add_point(state=self.root.state, policy=policy) # verify inDEX YOYOYO
+        action = np.random.choice(7, 1, p=policy)[0]
         action = self.select_highest_UCB1()
+        node.state.display()
         self.play_action(action)
         self.root = self.current_node
-#        self.root.state.display()
         v = self.self_play(dataset)
-#        dataset.data[dataset_index].V = np.array([v])
+        dataset.data[dataset_index].V = np.array([v])
+        dataset.data[dataset_index].S.display()
+        print("OYYOYOYO")
+#        dataset.data[dataset_index].display()
+#        print("HHOHOHOHOHO")
+#        for act in node.actions:
+#            print(act, " : ", node.children.get(act).visits)
+#        print("SUM: ", np.sum(policy))
+#        print("LIHUJGASD")
         return -v
 
     def play_one_move(self, iterations = 1000):
@@ -128,7 +133,6 @@ class MCTS():
         self.play_action(action)
         self.root = self.current_node
 
-
     def self_play_new_game(self):
         print("new game")
         self.root = self.tree_root
@@ -136,8 +140,9 @@ class MCTS():
         self.current_node.state.reset()
         self.self_play(self.dataset)
     
-    def policy_policy(self):
+    def policy_policy(self): #IT FUCKED UP
         '''
+            IT FUCKED UP
             return policy vector based on visit numbers
             USES ROOT not current node !!!!
             state must correspond to node
@@ -145,18 +150,17 @@ class MCTS():
         policy = np.zeros(7)
         for action in self.root.actions:
             policy[action] = self.root.children.get(action).visits
-        policy = policy / sum(policy)
-        if (self.root.state.turn < 25): #DEFINE here
-            temperature = 1
-        else:
-            temperature = 0.1
-        for idx in range(len(policy)):
-            policy[idx] = policy[idx]**(1/temperature)
+#            print(action, ": ", self.root.children.get(action).visits)
+#        policy = policy / sum(policy)
+#        if (self.root.state.turn < 25): #DEFINE here
+#            temperature = 1
+#        else:
+#            temperature = 1   #SHOULD BE 0.1
+#        for idx in range(len(policy)):
+#            policy[idx] = policy[idx]**(1/temperature)
         policy = policy / sum(policy) #for rounding errors causing numpy.rando.choice to crash
+#        print("POLICY", policy)
         return (policy)
-
-    def DNN_fill_current_node(self): #must return aproximated V
-        return (0.5)
 
     def simulate(self, node = None, f = lambda x : random.randint(0, len(x) - 1)):
         '''

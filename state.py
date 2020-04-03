@@ -111,7 +111,7 @@ class state():
 
     def get_reward(self):
         '''
-            returns 1, 0 or -1 depending on the winner
+            returns 1, 0
             assumes self.victory has been updated (done everytime we drop_piece)
         '''
         if self.victory == ".":
