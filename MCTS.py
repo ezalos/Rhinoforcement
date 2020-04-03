@@ -32,19 +32,31 @@ class MCTS():
             self.rollout_policy = lambda : self.simulate()
         self.dnn = Deep_Neural_Net()
 
+    def launch(self):
+        self.current_node = self.tree_root
+        self.current_node.state.reset()
+        self.MCTS_to_reward()
+        self.tree_root.print_n_floor(self.tree_root, 0)
+    
     def MCTS_to_reward(self):
         node = self.current_node
-#        node.state.display()
+ #       node.state.display()
 #        print("isterm:", node.is_terminal, "is full: ", node.is_fully_expanded, "node", node)
         if (node.is_terminal): #game is finished
             node.visits += 1
-            v = node.state.get_reward()
+            v = -node.state.get_reward()
             node.total_reward += v
             return -v
 
         if (node.is_fully_expanded == False and node.P == None):  #first visit
             #v = self.rollout_policy()
-            v = self.simulate()
+            winner = self.simulate() 
+            if (winner == node.player):
+                v = -1
+            elif (winner == "."):
+                v = 0
+            else:
+                v = 1
             node.P = 1 #cheat
             node.visits += 1
             node.total_reward += v
@@ -52,18 +64,32 @@ class MCTS():
 
         if (node.is_fully_expanded == False and node.P != None):  #second visit
             self.expand_current_node()
+            self.play_action(self.select())
+            v = self.MCTS_to_reward()
+            node.visits += 1
+            node.total_reward += v
+            return -v
 
+        if (node.is_fully_expanded):
         #action = self.tree_policy()
-        action = self.select()
-        self.play_action(action)
-        v = self.MCTS_to_reward()
+            action = self.select()
+            self.play_action(action)
+            v = self.MCTS_to_reward()
 
-        node.visits += 1    #increase here or before PUCT evaluation ?
-        node.total_reward += v
-        return -v
+            node.visits += 1    #increase here or before PUCT evaluation ?
+            node.total_reward += v
+            return -v
+        
+        print(" YOOOOOO FUCKED UP BROOOO")
+        node.state.display()
 
-    def self_play(self, dataset = dataset(), iterations = 50): # DIRICHELET NMOISE
+    def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
         if (self.root.is_terminal):
+            print("TERMINAL")
+            self.root.display()
+            nod = self.root
+            print()
+            print("visits: ", nod.visits, "reward: ", nod.total_reward)
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
 
@@ -75,20 +101,23 @@ class MCTS():
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
 
-        policy = self.policy_policy()
-#        print("policy", policy)
-#        print(dataset)
-        dataset_index = dataset.add_point(state=self.root.state, policy=policy) # verify inDEX YOYOYO
-        action = np.random.choice(7, 1, p=policy)[0]
-
+#        policy = self.policy_policy()
+#        if (DEBUG > 2):
+#            print("policy", policy)
+#            print(dataset)
+#        dataset_index = dataset.add_point(state=self.root.state, policy=policy) # verify inDEX YOYOYO
+#        action = np.random.choice(7, 1, p=policy)[0]
+        action = self.select_highest_UCB1()
         self.play_action(action)
         self.root = self.current_node
-        self.root.state.display()
+#        self.root.state.display()
         v = self.self_play(dataset)
-        dataset.data[dataset_index] = v
+#        dataset.data[dataset_index].V = np.array([v])
         return -v
 
+
     def self_play_new_game(self):
+        print("new game")
         self.root = self.tree_root
         self.current_node = self.root
         self.current_node.state.reset()
@@ -121,6 +150,7 @@ class MCTS():
             plays random moves until the game ends.
             returns the obtained reward.
         '''
+#        print("SIMULATE")
         if node == None:
             node = self.current_node
         state = copy.deepcopy(node.state) # maybe remove this later
@@ -129,16 +159,18 @@ class MCTS():
             move = f(actions)
             play = actions[move]
             state.drop_piece(play)
-        return (state.get_reward())
+#        print(state.victory)
+        return (state.victory)
 
     def play_action(self, action):
         '''
             Does the action.
+            Changes current node and the state
             the child node MUST ALREADY EXIST
         '''     
-        self.current_node.state.drop_piece(action)
+        self.current_node.do_action(action)
         self.current_node = self.current_node.children.get(action)
-        self.current_node.state = self.current_node.daddy.state
+        self.current_node.state = self.current_node.daddy.state #should be removed later
 
     def policy_UCB1(self):
         policy = numpy.full([7], numpy.NINF, dtype=float) #arbitrary small number so it will not be the maximum
@@ -146,7 +178,7 @@ class MCTS():
             policy[action] = self.current_node.children.get(action).UCB1()
         best_UCB1 = policy.max()
         policy[policy != best_UCB1] = 0.0
-        policy = policy / (numpy.count_nonzero(policy) * best_UCB1)
+        policy = policy / numpy.sum(policy)
         return(policy)
 
     def select_UCB1_policy(self):
@@ -183,7 +215,10 @@ class MCTS():
         return (best_action)
 
     def select(self):
-        return (self.current_node.PUCT(self.dnn))
+        if (self.current_node.unexplored_babies > 0):
+            return (self.select_UCB1_policy())
+        else:
+            return (self.select_highest_UCB1())
 
     def select_greedy(self):
         '''

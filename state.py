@@ -83,9 +83,6 @@ class state():
         return False
 
     def check_winner(self):
-        if self.turn >= 42:
-            self.victory = '.'
-            return False
         if self.last_move[0] == -1:
             for row in MAX_ROWS:
                 for col in MAX_COLS:
@@ -108,6 +105,8 @@ class state():
                 return True
             elif self.check_line(-1, 1):
                 return True
+        if self.turn >= 42:
+            self.victory = "."
         return False
 
     def get_reward(self):
@@ -120,7 +119,7 @@ class state():
         elif self.victory == "X":
             return (1)
         elif self.victory == "O":
-            return (-1)
+            return (1)
         else:
             return None
 
@@ -185,9 +184,9 @@ class state():
         move = self.last_move
         print("Turn", YELLOW, self.turn, RESET, "for ", end="")
         if self.player == "X":
-            print(BLUE + 'O' + RESET, end="")
+            print(BLUE + 'X' + RESET, end="")
         else:
-            print(RED + 'X' + RESET, end="")
+            print(RED + 'O' + RESET, end="")
         print("")
         for rows in range(MAX_ROWS):
             for cols in range(MAX_COLS):
