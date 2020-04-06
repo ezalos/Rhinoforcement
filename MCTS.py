@@ -44,14 +44,12 @@ class MCTS():
         if (node.is_terminal): #game is finished
             node.visits += 1
             v = node.state.get_reward()
-#            node.state.display()
-#            print("winna: ", node.state.victory, "  playa : ", node.state.player, "  v: ", v)
             node.total_reward += v
+            print("PLAYA: ", node.player, "winna: ", node.state.victory, "  v: ", v)
             return -v
 
         if (node.is_fully_expanded == False and node.P == None):  #first visit
             v = self.rollout_policy()
-            #v = -self.simulate() 
             node.P = 1 #cheat
             node.visits += 1
             node.total_reward += v
@@ -59,15 +57,14 @@ class MCTS():
 
         if (node.is_fully_expanded == False and node.P != None):  #second visit
             self.expand_current_node()
-            self.play_action(self.select())
+            self.play_action(self.tree_policy())
             v = self.MCTS_to_reward()
             node.visits += 1
             node.total_reward += v
             return -v
 
         if (node.is_fully_expanded):
-            #action = self.tree_policy()
-            action = self.select()
+            action = self.tree_policy()
             self.play_action(action)
             v = self.MCTS_to_reward()
             node.visits += 1    #increase here or before PUCT evaluation ?
@@ -76,9 +73,8 @@ class MCTS():
         print(" YOOOOOO FUCKED UP BROOOO")
 
     def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
-        node = self.root
         if (self.root.is_terminal):
-            return -(self.root.state.get_reward()) , self.root.state.victory
+            return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
 
         for _ in range(iterations):
@@ -94,10 +90,9 @@ class MCTS():
         #action = self.select_highest_visits()
         self.play_action(action)
         self.root = self.current_node
-        v , winna = self.self_play(dataset)
+        v = self.self_play(dataset)
         dataset.data[dataset_index].V = np.array([v])
-        print("playa: ", node.player, "winna: ", winna, "v: ",v)
-        return -v , winna
+        return -v
 
     def play_one_move(self, iterations = 400):
         if (self.root.is_terminal):
@@ -274,7 +269,7 @@ class MCTS():
             else:
                 self.root = self.current_node
                 self.play_one_move()
-            #self.current_node.print_n_floor(self.current_node.daddy, limit=0)
+            self.current_node.print_n_floor(self.current_node.daddy, limit=0)
         self.current_node.state.display()
 
     def display_game(self):
