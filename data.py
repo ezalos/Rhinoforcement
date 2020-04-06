@@ -33,13 +33,6 @@ class dataset():
         self.size += 1
         return (len(self.data) - 1)
 
-    def add_value_to_set(self, value, last_node): #if 1 game = 1 dataset then this is needlessly complicated
-        i = 1
-        while (last_node.daddy != None): #should be no need for +1 as final state will not be included in set
-            self.data[-i].V = np.array([value])
-            last_node = last_node.daddy
-            i += 1
-
     def display(self):
         for data in self.data:
             data.display()

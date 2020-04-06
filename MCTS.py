@@ -43,13 +43,15 @@ class MCTS():
         node = self.current_node
         if (node.is_terminal): #game is finished
             node.visits += 1
-            v = -node.state.get_reward()
+            v = node.state.get_reward()
+#            node.state.display()
+#            print("winna: ", node.state.victory, "  playa : ", node.state.player, "  v: ", v)
             node.total_reward += v
             return -v
 
         if (node.is_fully_expanded == False and node.P == None):  #first visit
-            #v = self.rollout_policy()
-            v = -self.simulate() 
+            v = self.rollout_policy()
+            #v = -self.simulate() 
             node.P = 1 #cheat
             node.visits += 1
             node.total_reward += v
@@ -68,21 +70,15 @@ class MCTS():
             action = self.select()
             self.play_action(action)
             v = self.MCTS_to_reward()
-#            if (node.state.victory != ''):
-#                print("plya: ", node.player, "winna: ", node.state.victory, "V: ", v)
             node.visits += 1    #increase here or before PUCT evaluation ?
             node.total_reward += v
             return -v
-        
         print(" YOOOOOO FUCKED UP BROOOO")
-        node.state.display()
 
     def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
         node = self.root
         if (self.root.is_terminal):
-            print("TERMINAL")
-            self.root.display()
-            return -(self.root.state.get_reward())
+            return -(self.root.state.get_reward()) , self.root.state.victory
         initial_state = copy.deepcopy(self.root.state)
 
         for _ in range(iterations):
@@ -92,33 +88,19 @@ class MCTS():
         
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
-
-        policy = self.policy_policy() ## IS FUKED UPO
-        dataset_index = dataset.add_point(state=self.root.state, policy=policy) # verify inDEX YOYOYO
+        policy = self.policy_policy()
+        dataset_index = dataset.add_point(state=self.root.state, policy=policy)
         action = np.random.choice(7, 1, p=policy)[0]
-        action = self.select_highest_UCB1()
-        node.state.display()
+        #action = self.select_highest_visits()
         self.play_action(action)
         self.root = self.current_node
-        v = self.self_play(dataset)
+        v , winna = self.self_play(dataset)
         dataset.data[dataset_index].V = np.array([v])
-        dataset.data[dataset_index].S.display()
-        print("OYYOYOYO")
-#        dataset.data[dataset_index].display()
-#        print("HHOHOHOHOHO")
-#        for act in node.actions:
-#            print(act, " : ", node.children.get(act).visits)
-#        print("SUM: ", np.sum(policy))
-#        print("LIHUJGASD")
-        return -v
+        print("playa: ", node.player, "winna: ", winna, "v: ",v)
+        return -v , winna
 
-    def play_one_move(self, iterations = 1000):
+    def play_one_move(self, iterations = 400):
         if (self.root.is_terminal):
-            print("TERMINAL")
-            self.root.display()
-            nod = self.root
-            print()
-            print("visits: ", nod.visits, "reward: ", nod.total_reward)
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
 
@@ -140,26 +122,27 @@ class MCTS():
         self.current_node.state.reset()
         self.self_play(self.dataset)
     
-    def policy_policy(self): #IT FUCKED UP
+    def policy_policy(self, node = None): #IT FUCKED UP
         '''
-            IT FUCKED UP
+            NO TEMPERATURE YET
             return policy vector based on visit numbers
             USES ROOT not current node !!!!
             state must correspond to node
         '''
+        if node == None :
+            node = self.root
         policy = np.zeros(7)
-        for action in self.root.actions:
-            policy[action] = self.root.children.get(action).visits
-#            print(action, ": ", self.root.children.get(action).visits)
-#        policy = policy / sum(policy)
+        for action in node.actions:
+            policy[action] = node.children.get(action).visits
 #        if (self.root.state.turn < 25): #DEFINE here
 #            temperature = 1
 #        else:
 #            temperature = 1   #SHOULD BE 0.1
 #        for idx in range(len(policy)):
 #            policy[idx] = policy[idx]**(1/temperature)
-        policy = policy / sum(policy) #for rounding errors causing numpy.rando.choice to crash
-#        print("POLICY", policy)
+        summ = sum(policy)
+        for action in node.actions:
+            policy[action] = policy[action] / summ
         return (policy)
 
     def simulate(self, node = None, f = lambda x : random.randint(0, len(x) - 1)):
@@ -178,11 +161,11 @@ class MCTS():
 
         winner = state.victory
         if (winner == node.player):
-            v = 1
+            v = -1
         elif (winner == "."):
             v = 0
         else:
-            v = -1
+            v = 1
         return (v)
 
     def play_action(self, action):
@@ -255,7 +238,7 @@ class MCTS():
             while True:
                 to_play = input("What should be your next move ?\n")
                 if to_play == "cheat":
-                    self.tree.print_n_floor(self.current_node, limit=0)
+                    self.current_node.print_n_floor(self.current_node, limit=0)
                     to_play = None
                 elif to_play == "exit":
                     return None
@@ -272,7 +255,7 @@ class MCTS():
                         print("I didn't get that.")
         return True
 
-    def play_vs_MCTS(self): ## UNFUNCTIONAL NOW
+    def play_vs_MCTS(self):
         self.current_node = self.tree_root
         self.current_node.state.reset()
         while (True):
@@ -291,8 +274,16 @@ class MCTS():
             else:
                 self.root = self.current_node
                 self.play_one_move()
-            self.current_node.print_n_floor(self.current_node.daddy, limit=0)
+            #self.current_node.print_n_floor(self.current_node.daddy, limit=0)
         self.current_node.state.display()
+
+    def display_game(self):
+        self.current_node = self.tree_root
+        self.current_node.state.reset()
+        while self.current_node.state.victory is '':
+            self.root = self.current_node
+            self.play_one_move()
+            self.root.state.display()
 
     def select_highest_visits(self):
         max = -1

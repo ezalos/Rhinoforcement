@@ -182,11 +182,11 @@ class state():
     def display(self):
         board = self.board
         move = self.last_move
-        print("Turn", YELLOW, self.turn, RESET, "for ", end="")
+        print("Turn", YELLOW, self.turn - 1, RESET, "for ", end="")
         if self.player == "X":
-            print(BLUE + 'X' + RESET, end="")
+            print(BLUE + 'O' + RESET, end="")
         else:
-            print(RED + 'O' + RESET, end="")
+            print(RED + 'X' + RESET, end="")
         print("")
         for rows in range(MAX_ROWS):
             for cols in range(MAX_COLS):
