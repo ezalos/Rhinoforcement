@@ -76,8 +76,10 @@ class MCTS():
         print(" YOOOOOO FUCKED UP BROOOO")
 
     def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
-        self.root.state.display()
         if (self.root.is_terminal):
+            if True:
+                self.root.state.display()
+                self.root.print_n_floor(node=self.root, limit=0)
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
 
@@ -88,6 +90,11 @@ class MCTS():
         
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
+        
+        if True:
+            self.root.state.display()
+            self.root.print_n_floor(node=self.root, limit=0)
+        
         #self.current_node.print_n_floor(limit=1)
         policy = self.policy_policy()
         dataset_index = dataset.add_point(state=self.root.state, policy=policy)
@@ -119,6 +126,7 @@ class MCTS():
         print("new game")
         self.root = self.tree_root
         self.current_node = self.root
+        self.root.is_terminal = False
         self.current_node.state.reset()
         self.self_play(self.dataset)
     

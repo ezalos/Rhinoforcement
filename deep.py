@@ -112,6 +112,7 @@ class Deep_Neural_Net():
         self.deep_neural_net = ConnectNet()
         self.policy = None
         self.value = None
+        self.version = 0
 
     def convert_state(self, state):
         encoded_s = state.encode_board();
@@ -133,6 +134,7 @@ class Training():
         self.batch_size = 100
         self.learning_rate = 0.001
         self.total_loss_epoch = []
+        self.show = 0
         self.initialize(DNN)
 
     def initialize(self, DNN):
@@ -149,16 +151,17 @@ class Training():
 
     def forward_pass(self, data):
         #Get data ready
-        data.display()
         self.DNN.convert_state(data.S)
         value = torch.from_numpy(data.V).float()
         policy = torch.from_numpy(data.P).float()
         #Run forward pass
         policy_pred, value_pred = self.DNN.run()
-        print("V:    ", value)
-        print("V_y:  ", value_pred)
-        print("P:    ", policy)
-        print("P_y:  ", policy_pred)
+        if self.show:
+            data.display()
+            print("V:    ", value)
+            print("V_y:  ", value_pred)
+            print("P:    ", policy)
+            print("P_y:  ", policy_pred)
         self.loss = self.criterion(value_pred[:,0], value, policy_pred, policy)
 
     def keep_track_of_numbers(self, i, epoch):
@@ -180,7 +183,8 @@ class Training():
                 self.keep_track_of_numbers(i, epoch)
             self.scheduler.step()#it change the learning rate
             self.total_loss_epoch.append(self.total_loss)
-            print(self.total_loss_epoch)
+            print("Total loss: ", self.total_loss)
+        self.DNN.version += 1
 
 
 

@@ -15,6 +15,7 @@ class node():
         self.P = None
         self.children = {}
         self.P = None
+        self.P_update = 0
         self.actions = self.state.actions()
         self.unexplored_babies = len(self.actions)
         self.is_fully_expanded = (len(self.actions) == len(self.children))
@@ -67,7 +68,8 @@ class node():
             if child != None:
                 Q = child.total_reward / (1 + child.visits) #should be this
                 Q = child.total_reward #but this seems better
-                if child.P == None:
+                if child.P == None or self.P_update < DNN.version:
+                    self.P_update = DNN.version
                     if not run:
                         DNN.convert_state(self.state)
                         DNN.run()
@@ -91,7 +93,7 @@ class node():
         print(" " * (max_nb_size - len(str(self.total_reward))), end="")
         print(self.total_reward, "/", self.visits, end="")
         print(" " * (max_nb_size - len(str(self.visits))), end="")
-        print("=", str(self.UCB1())[:7], RESET, end="")
+        print("=>", str(self.P)[:7], RESET, end="")
         print(RESET, end="")
 
     def print_n_floor(self, node = None, limit=1, deepness=0):

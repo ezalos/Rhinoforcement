@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/04/06 17:25:43 by ezalos           ###   ########.fr        #
+#    Updated: 2020/04/06 18:40:43 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -58,9 +58,11 @@ def load_state(file_name = cache):
 
 
 if __name__ == "__main__":
-#    try:
-#        jo = load_state()
-#    except:
+    jo = MCTS()
+    try:
+        jo.dnn = load_state().DNN
+    except:
+        print("No dnn")
 #        print("New MCTS")
 #        jo = MCTS()
 #    iterations = 1
@@ -95,15 +97,22 @@ if __name__ == "__main__":
 #        k += 1
 #    jo.play_vs_MCTS()
     #tree = load_state()
-    jo = MCTS()
-    root = jo.tree_root
-    for _ in range(1):
+#    jo = MCTS()
+    train = Training(jo.dnn)
+    for _ in range(10):
         start = time.time()
         jo.self_play_new_game()
         #jo.current_node.state.display()
-        jo.tree_root.print_n_floor(jo.tree_root, 0)
+        #jo.tree_root.print_n_floor(jo.tree_root, 0)
         print(time.time() - start)
-    train = Training(jo.dnn)
-    train.initialize(jo.dnn)
-    train.train(jo.dataset)
+        train.initialize(jo.dnn)
+        train.train(jo.dataset)
+        tmp = jo.dnn
+        jo.current_node = node()
+        jo.root = jo.current_node
+        jo.tree_root = jo.root
+        jo.size = 1
+        jo.dataset = dataset()
+        jo.dnn = tmp
+        save_state(train, cache)
     #save_state(jo.tree_root)
