@@ -72,6 +72,7 @@ class node():
                     self.P = DNN.policy[act]
                 N = math.sqrt(self.visits) / (1 + child.visits)
                 PUCT.append([Q + (C * self.P * N), act])
+        return PUCT
         best_puct = -1234567890
         pos = -1
         for i in range(len(PUCT)):

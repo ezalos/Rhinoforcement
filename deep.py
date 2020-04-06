@@ -132,6 +132,7 @@ class Training():
         self.num_classes = 10
         self.batch_size = 100
         self.learning_rate = 0.001
+        self.total_loss_epoch = []
         self.initialize(DNN)
 
     def initialize(self, DNN):
@@ -158,34 +159,28 @@ class Training():
         print("V_y:  ", value_pred)
         print("P:    ", policy)
         print("P_y:  ", policy_pred)
-        loss = self.criterion(value_pred[:,0], value, policy_pred, policy)
+        self.loss = self.criterion(value_pred[:,0], value, policy_pred, policy)
+
+    def keep_track_of_numbers(self, i):
+        self.total_loss += self.loss.item()#Loss is the sum of differencies for v & v_y
+        self.loss_list.append(self.loss.item())
+        #if (i + 1) % self.batch_size == 0:
+        print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
+            .format(epoch + 1, self.total_epochs, i + 1, self.total_step, self.loss.item()))
 
     def train(self, dataset):
         print("\n\nTRAINING DNN")
-        #update_size = len(train_loader)//10
         for epoch in range(self.total_epoch):
-            total_loss = 0.0
-            #losses_per_batch = []
-            total_step = len(dataset.data)
-            loss_list = []
-            acc_list = []
+            self.total_loss = 0.0
+            self.total_step = len(dataset.data)
+            self.loss_list = []
             for data, i in enumerate(dataset.data):#should be a fraction of data set of size batch_size
                 self.forward_pass(data)
                 self.backprop()
-                #Track numbers
-                total_loss += loss.item()#Loss is the sum of differencies for v & v_y
-
-                #total = labels.size(0)
-                #_, predicted = torch.max(outputs.data, 1)
-                #correct = (predicted == labels).sum().item()
-                #acc_list.append(correct / total)#Accuracy is the % of good answers
-                if (i + 1) % self.batch_size == 0:
-                    print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                          .format(epoch + 1, num_epochs, i + 1, total_step, loss.item(),
-                                  (correct / total) * 100))
-
+                self.keep_track_of_numbers(i)
             scheduler.step()#it change the learning rate
-        #should print total update here
+            self.total_loss_epoch.append(self.total_loss)
+            print(self.total_loss_epoch)
 
 
 
