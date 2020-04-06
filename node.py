@@ -59,19 +59,25 @@ class node():
 
     def PUCT(self, DNN):
         PUCT = []
+        run = 0
         C = 1
         #DNN = Deep_Neural_Net()
-        DNN.convert_state(self.state)
-        DNN.run()
         for act in self.actions:
             child = self.children.get(act)
             if child != None:
                 Q = child.total_reward / (1 + child.visits) #should be this
                 Q = child.total_reward #but this seems better
-                if self.P == None:
-                    self.P = DNN.policy[act]
+                if child.P == None:
+                    if not run:
+                        DNN.convert_state(self.state)
+                        DNN.run()
+                        run = 1
+                    child.P = DNN.policy[act]
                 N = math.sqrt(self.visits) / (1 + child.visits)
-                PUCT.append([Q + (C * self.P * N), act])
+                PUCT.append(Q + (C * child.P * N))
+            else:
+                PUCT.append(0)
+        #print("Puct: ", PUCT)
         return PUCT
         best_puct = -1234567890
         pos = -1

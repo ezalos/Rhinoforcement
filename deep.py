@@ -137,8 +137,8 @@ class Training():
 
     def initialize(self, DNN):
         self.DNN = DNN
-        self.optimizer = optim.Adam(self.DNN.deep_neural_net.parameters(), lr=learning_rate, betas=(0.8, 0.999))
-        self.scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[50,100,150,200,250,300,400], gamma=0.77)
+        self.optimizer = optim.Adam(self.DNN.deep_neural_net.parameters(), lr=self.learning_rate, betas=(0.8, 0.999))
+        self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50,100,150,200,250,300,400], gamma=0.77)
         self.criterion = AlphaLoss()
 
     def backprop(self):
@@ -150,18 +150,18 @@ class Training():
     def forward_pass(self, data):
         #Get data ready
         data.display()
-        self.DDN.convert_state(data.S)
+        self.DNN.convert_state(data.S)
         value = torch.from_numpy(data.V).float()
         policy = torch.from_numpy(data.P).float()
         #Run forward pass
-        policy_pred, value_pred = self.DNN.deep_neural_net()
+        policy_pred, value_pred = self.DNN.run()
         print("V:    ", value)
         print("V_y:  ", value_pred)
         print("P:    ", policy)
         print("P_y:  ", policy_pred)
         self.loss = self.criterion(value_pred[:,0], value, policy_pred, policy)
 
-    def keep_track_of_numbers(self, i):
+    def keep_track_of_numbers(self, i, epoch):
         self.total_loss += self.loss.item()#Loss is the sum of differencies for v & v_y
         self.loss_list.append(self.loss.item())
         #if (i + 1) % self.batch_size == 0:
@@ -170,15 +170,15 @@ class Training():
 
     def train(self, dataset):
         print("\n\nTRAINING DNN")
-        for epoch in range(self.total_epoch):
+        for epoch in range(self.total_epochs):
             self.total_loss = 0.0
             self.total_step = len(dataset.data)
             self.loss_list = []
-            for data, i in enumerate(dataset.data):#should be a fraction of data set of size batch_size
+            for i, data in enumerate(dataset.data, 0):#should be a fraction of data set of size batch_size
                 self.forward_pass(data)
                 self.backprop()
-                self.keep_track_of_numbers(i)
-            scheduler.step()#it change the learning rate
+                self.keep_track_of_numbers(i, epoch)
+            self.scheduler.step()#it change the learning rate
             self.total_loss_epoch.append(self.total_loss)
             print(self.total_loss_epoch)
 

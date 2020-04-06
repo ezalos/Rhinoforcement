@@ -45,19 +45,21 @@ class MCTS():
             node.visits += 1
             v = node.state.get_reward()
             node.total_reward += v
-            print("PLAYA: ", node.player, "winna: ", node.state.victory, "  v: ", v)
+            #print("PLAYA: ", node.player, "winna: ", node.state.victory, "  v: ", v)
             return -v
 
-        if (node.is_fully_expanded == False and node.P == None):  #first visit
+        if (node.is_fully_expanded == False and node.visits == 0):  #first visit
             v = self.rollout_policy()
-            node.P = 1 #cheat
+            #node.P = 1 #cheat
             node.visits += 1
             node.total_reward += v
             return -v
 
-        if (node.is_fully_expanded == False and node.P != None):  #second visit
+        if (node.is_fully_expanded == False and node.visits != 0):  #second visit
             self.expand_current_node()
-            self.play_action(self.tree_policy())
+            action = self.tree_policy()
+            #safe_action = node.state.actions()[action]
+            self.play_action(action)
             v = self.MCTS_to_reward()
             node.visits += 1
             node.total_reward += v
@@ -65,6 +67,7 @@ class MCTS():
 
         if (node.is_fully_expanded):
             action = self.tree_policy()
+            #safe_action = node.state.actions()[action]
             self.play_action(action)
             v = self.MCTS_to_reward()
             node.visits += 1    #increase here or before PUCT evaluation ?
@@ -73,6 +76,7 @@ class MCTS():
         print(" YOOOOOO FUCKED UP BROOOO")
 
     def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
+        self.root.state.display()
         if (self.root.is_terminal):
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
@@ -84,6 +88,7 @@ class MCTS():
         
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
+        #self.current_node.print_n_floor(limit=1)
         policy = self.policy_policy()
         dataset_index = dataset.add_point(state=self.root.state, policy=policy)
         action = np.random.choice(7, 1, p=policy)[0]
@@ -181,7 +186,35 @@ class MCTS():
         policy[policy != best_UCB1] = 0.0
         policy = policy / numpy.sum(policy)
         return(policy)
+    
+    def policy_PUCT(self):
+        policy = np.array(self.current_node.PUCT(self.dnn))
+        best_PUCT = policy.max()
+        policy[policy != best_PUCT] = 0.0
+        policy = policy / numpy.sum(policy)
+        #print("Policy: ", policy)
+        return(policy)
 
+    def select_PUCT_policy(self):
+        '''
+            returns the action leading to the state with the highest UCB score.
+            will pick a random action among the best if there are multiple
+            3x SLOWER THAN SELECT HIGHEST UCB1
+        '''
+        policy = self.policy_PUCT()
+        #print("Select: ", policy)
+        try:
+            act = numpy.random.choice(len(policy), 1, p=policy)[0]
+        except:
+            act = 8
+            while (act == 8):
+                act = random.randint(0, 6)
+                if (policy[act] == 0):
+                    act = 8
+        #print("Act: ", act)
+        safe_action = self.current_node.actions[act]
+        return (safe_action)
+    
     def select_UCB1_policy(self):
         '''
             returns the action leading to the state with the highest UCB score.
@@ -216,6 +249,7 @@ class MCTS():
         return (best_action)
 
     def select(self):
+        return self.select_PUCT_policy()
         if (self.current_node.unexplored_babies > 0):
             return (self.select_UCB1_policy())
         else:

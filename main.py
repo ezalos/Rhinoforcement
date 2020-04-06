@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/04/02 16:09:26 by ezalos           ###   ########.fr        #
+#    Updated: 2020/04/06 17:25:43 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,6 +31,7 @@ from data import dataset
 import sys
 from time import sleep
 from listy import ft_progress
+from deep import Training
 import time
 
 
@@ -96,10 +97,13 @@ if __name__ == "__main__":
     #tree = load_state()
     jo = MCTS()
     root = jo.tree_root
-    for _ in range(100):
+    for _ in range(1):
         start = time.time()
         jo.self_play_new_game()
         #jo.current_node.state.display()
         jo.tree_root.print_n_floor(jo.tree_root, 0)
         print(time.time() - start)
+    train = Training(jo.dnn)
+    train.initialize(jo.dnn)
+    train.train(jo.dataset)
     #save_state(jo.tree_root)

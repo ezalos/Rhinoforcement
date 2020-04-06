@@ -25,8 +25,9 @@ class state():
         if self.victory != '' :
             print("Game Over")
         elif self.board[0, column] != " ":
-            print("Invalid move")
-            print(column)
+            print("Invalid move :", column)
+            print("Valid actions: ", self.actions())
+            self.display()
         else:
             row = MAX_ROWS - 1
             while " " != self.board[row, column]:
