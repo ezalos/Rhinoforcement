@@ -32,7 +32,7 @@ import sys
 from time import sleep
 from listy import ft_progress
 import time
-
+from data import Dataseto
 
 cache = "cache_MCTS_tree"
 
