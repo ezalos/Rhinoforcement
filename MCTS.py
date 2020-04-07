@@ -10,11 +10,14 @@ from data import dataset
 from data import datapoint
 import numpy as np
 import sklearn
+import torch
+
+from data import Dataseto
 
 DEBUG = 0
 class MCTS():
 
-    def __init__(self, node = node(), dataset = dataset(), tree_policy = None, rollout_policy = None):
+    def __init__(self, node = node(), dataset = Dataseto(), tree_policy = None, rollout_policy = None):
         '''
             tree policy takes a node and returns an action, rollout_policy takes a node and retruns a value.
         '''
@@ -31,7 +34,7 @@ class MCTS():
             self.rollout_policy = rollout_policy
         else:
             self.rollout_policy = lambda : self.simulate()
-        self.dnn = Deep_Neural_Net()
+        #self.dnn = Deep_Neural_Net()
 
     def launch(self):
         self.current_node = self.tree_root
@@ -45,7 +48,6 @@ class MCTS():
             node.visits += 1
             v = node.state.get_reward()
             node.total_reward += v
-            print("PLAYA: ", node.player, "winna: ", node.state.victory, "  v: ", v)
             return -v
 
         if (node.is_fully_expanded == False and node.P == None):  #first visit
@@ -72,7 +74,8 @@ class MCTS():
             return -v
         print(" YOOOOOO FUCKED UP BROOOO")
 
-    def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
+    def self_play(self, iterations = 400): # DIRICHELET NMOISE
+        dataset = self.dataset
         if (self.root.is_terminal):
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
@@ -90,8 +93,8 @@ class MCTS():
         #action = self.select_highest_visits()
         self.play_action(action)
         self.root = self.current_node
-        v = self.self_play(dataset)
-        dataset.data[dataset_index].V = np.array([v])
+        v = self.self_play()
+        dataset.data[dataset_index].V = torch.tensor([v])
         return -v
 
     def play_one_move(self, iterations = 400):
@@ -115,7 +118,7 @@ class MCTS():
         self.root = self.tree_root
         self.current_node = self.root
         self.current_node.state.reset()
-        self.self_play(self.dataset)
+        self.self_play()
     
     def policy_policy(self, node = None): #IT FUCKED UP
         '''
@@ -126,7 +129,7 @@ class MCTS():
         '''
         if node == None :
             node = self.root
-        policy = np.zeros(7)
+        policy = np.zeros(7, dtype=float)
         for action in node.actions:
             policy[action] = node.children.get(action).visits
 #        if (self.root.state.turn < 25): #DEFINE here
