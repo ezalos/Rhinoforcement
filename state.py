@@ -183,6 +183,7 @@ class state():
     def display(self):
         board = self.board
         move = self.last_move
+        predict_win = True
         print("Turn", YELLOW, self.turn - 1, RESET, "for ", end="")
         if self.player == "X":
             print(BLUE + 'O' + RESET, end="")
@@ -198,6 +199,31 @@ class state():
                     print(RED + 'X' + RESET, end="")
                 elif spot == 'O':
                     print(BLUE + 'O' + RESET, end="")
+                elif predict_win and self.victory == '' and ((rows < MAX_ROWS - 1 and board[rows + 1, cols] != ' ') or (rows == MAX_ROWS - 1)):
+                    try_ = state()
+                    try_.copy(self)
+                    try_.do_action(cols)
+                    vic_1 = try_.victory
+                    try_.copy(self)
+                    try_.player = "X" if try_.player == "O" else "O"
+                    try_.do_action(cols)
+                    vic_2 = try_.victory
+                    if vic_1 != "" and vic_2 != "":
+                        print(PURPLE + '*' + RESET, end="")
+                    elif vic_1 != "":
+                        if vic_1 == 'X':
+                            print(RED, end="")
+                        else:
+                            print(BLUE, end="")
+                        print('-' + RESET, end="")
+                    elif vic_2 != "":
+                        if vic_2 == 'X':
+                            print(RED, end="")
+                        else:
+                            print(BLUE, end="")
+                        print('+' + RESET, end="")
+                    else:
+                        print('.' + RESET, end="")
                 else:
                     print('.' + RESET, end="")
                 print(' ', end="")
