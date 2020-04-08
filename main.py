@@ -6,7 +6,7 @@
 #    By: ezalos <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/03/25 11:40:52 by ezalos            #+#    #+#              #
-#    Updated: 2020/04/06 18:40:43 by ezalos           ###   ########.fr        #
+#    Updated: 2020/04/08 11:59:46 by ezalos           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -58,10 +58,12 @@ def load_state(file_name = cache):
 
 
 if __name__ == "__main__":
-    jo = MCTS()
     try:
+        jo = MCTS()
         jo.dnn = load_state().DNN
+        print("DNN version: ", jo.dnn.version)
     except:
+        jo = MCTS()
         print("No dnn")
 #        print("New MCTS")
 #        jo = MCTS()
@@ -100,11 +102,10 @@ if __name__ == "__main__":
 #    jo = MCTS()
     train = Training(jo.dnn)
     for _ in range(10):
-        start = time.time()
-        jo.self_play_new_game()
-        #jo.current_node.state.display()
-        #jo.tree_root.print_n_floor(jo.tree_root, 0)
-        print(time.time() - start)
+        for _ in range(5):
+            start = time.time()
+            jo.self_play_new_game()
+            print(time.time() - start)
         train.initialize(jo.dnn)
         train.train(jo.dataset)
         tmp = jo.dnn

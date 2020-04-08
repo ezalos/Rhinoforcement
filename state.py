@@ -157,13 +157,13 @@ class state():
                 self.board[row][col] = other.board[row][col]
 
     def encode_board(self):
-        encoded = np.zeros([MAX_ROWS, MAX_COLS, 3]).astype(int)
+        encoded = np.zeros([3, MAX_ROWS, MAX_COLS]).astype(int)
         player_conv = {"O":0, "X":1}
         for row in range(MAX_ROWS):
             for col in range(MAX_COLS):
                 pos = self.board[row, col]
                 if pos != " ":
-                    encoded[row, col, player_conv[pos]] = 1
+                    encoded[player_conv[pos], row, col] = 1
         encoded[:,:,2] = player_conv[self.player]
         return encoded
     

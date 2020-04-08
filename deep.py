@@ -83,13 +83,13 @@ class ConnectNet(nn.Module):
     def __init__(self):
         super(ConnectNet, self).__init__()
         self.conv = ConvBlock()
-        for block in range(5):
+        for block in range(10):
             setattr(self, "res_%i" % block,ResBlock())
         self.outblock = OutBlock()
 
     def forward(self,s):
         s = self.conv(s)
-        for block in range(5):
+        for block in range(10):
             s = getattr(self, "res_%i" % block)(s)
         s = self.outblock(s)
         return s
@@ -183,7 +183,8 @@ class Training():
                 self.keep_track_of_numbers(i, epoch)
             self.scheduler.step()#it change the learning rate
             self.total_loss_epoch.append(self.total_loss)
-            print("Total loss: ", self.total_loss)
+            print("Total loss:    ", self.total_loss)
+            print("Relative loss: ", self.total_loss / self.total_step)
         self.DNN.version += 1
 
 

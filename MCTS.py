@@ -79,7 +79,6 @@ class MCTS():
         if (self.root.is_terminal):
             if True:
                 self.root.state.display()
-                self.root.print_n_floor(node=self.root, limit=0)
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
 
@@ -196,9 +195,10 @@ class MCTS():
         return(policy)
     
     def policy_PUCT(self):
+        #print(self.dnn)
         policy = np.array(self.current_node.PUCT(self.dnn))
         best_PUCT = policy.max()
-        policy[policy != best_PUCT] = 0.0
+        #policy[policy != best_PUCT] = 0.0
         policy = policy / numpy.sum(policy)
         #print("Policy: ", policy)
         return(policy)
@@ -216,7 +216,7 @@ class MCTS():
         except:
             act = 8
             while (act == 8):
-                act = random.randint(0, 6)
+                act = random.randint(0, len(policy) - 1)
                 if (policy[act] == 0):
                     act = 8
         #print("Act: ", act)

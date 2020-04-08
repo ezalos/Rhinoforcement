@@ -13,6 +13,7 @@ class node():
         self.player = self.state.player
         self.Q = None
         self.P = None
+        self.PUCT_ = None
         self.children = {}
         self.P = None
         self.P_update = 0
@@ -68,6 +69,7 @@ class node():
             if child != None:
                 Q = child.total_reward / (1 + child.visits) #should be this
                 Q = child.total_reward #but this seems better
+                N = math.sqrt(self.visits) / (1 + child.visits)
                 if child.P == None or self.P_update < DNN.version:
                     self.P_update = DNN.version
                     if not run:
@@ -75,7 +77,7 @@ class node():
                         DNN.run()
                         run = 1
                     child.P = DNN.policy[act]
-                N = math.sqrt(self.visits) / (1 + child.visits)
+                    child.PUCT_ = (Q + (C * child.P * N))
                 PUCT.append(Q + (C * child.P * N))
             else:
                 PUCT.append(0)
@@ -89,39 +91,97 @@ class node():
                 pos = PUCT[i][1]
         return pos
  
-    def display(self, max_nb_size = 5):
+    def display(self, max_nb_size = 5, best_winrate=False, best_visits=False, best_puct=False, best_ucb1=False):
         print(" " * (max_nb_size - len(str(self.total_reward))), end="")
-        print(self.total_reward, "/", self.visits, end="")
+        if best_winrate:
+            print(GREEN, end="")
+        print(self.total_reward, end="")
+        if self.state.player == "O":
+            print(BLUE, end="")
+        else:
+            print(RED, end="")
+        print(" / ", end="")
+        if best_visits:
+            print(GREEN, end="")
+        elif self.state.player == "O":
+            print(BLUE, end="")
+        else:
+            print(RED, end="")
+        print(self.visits, end="")
         print(" " * (max_nb_size - len(str(self.visits))), end="")
-        print("=>", str(self.P)[:7], RESET, end="")
+        if best_puct:
+            print(GREEN, end="")
+        elif self.state.player == "O":
+            print(BLUE, end="")
+        else:
+            print(RED, end="")
+        print("   PUCT ", str(self.PUCT_)[:7], end="")
+        if best_ucb1:
+            print(GREEN, end="")
+        elif self.state.player == "O":
+            print(BLUE, end="")
+        else:
+            print(RED, end="")
+        print("   UCB1 ", str(self.UCB1())[:7], RESET, end="")
         print(RESET, end="")
 
     def print_n_floor(self, node = None, limit=1, deepness=0):
         if node == None:
             node = self
-        max = len(str(node.visits))
+        max = len(str(node.visits)) + 1
         best_UCB1 = -100000000000
-        best_action = -1 #quick fix
+        best_PUCT = -100000000000
+        best_action_UCB1 = -1 #quick fixi
+        best_action_PUCT = -1 #quick fixi
+        max_visits = -1
+        best_max_visits = -1
+        best_winrate = -100000000000
+        best_action_winrate = -1
         for action in node.actions :
             danger = node.children.get(action)
             if danger != None:
                 new_UCB1 = danger.UCB1()
-                if (new_UCB1 > best_UCB1):
-                    best_UCB1 = new_UCB1
-                    best_action = action
+                if (danger.UCB1() > best_UCB1):
+                    best_UCB1 = danger.UCB1()
+                    best_action_UCB1 = action
+                if (danger.PUCT_ > best_PUCT):
+                    best_PUCT = danger.PUCT_
+                    best_action_PUCT = action
+                if (danger.visits > max_visits):
+                    max_visits = danger.visits
+                    best_max_visits = action
+                if (danger.total_reward / danger.visits > best_winrate):
+                    best_winrate = danger.total_reward / danger.visits
+                    best_action_winrate = action
         for act in node.actions:
             child = node.children.get(act)
             if deepness < 2 or act == node.actions[0]:
                 print("    " * deepness, end="")
-            if act == best_action:
-                print(UNDERLINE, end="")
-            if deepness % 2 == 1:
+            if act == best_max_visits:
+                visits_high = True
+            else:
+                visits_high = False
+            if act == best_action_winrate:
+                winrate_high = True
+            else:
+                winrate_high = False
+            if act == best_action_UCB1:
+                #print(UNDERLINE, end="")
+                ucb1_high = True
+            else:
+                ucb1_high = False
+            if act == best_action_PUCT:
+                #print(BOLD, end="")
+                puct_high = True
+            else:
+                puct_high = False
+            if node.state.player == "O":
                 print(BLUE, end="")
             else:
                 print(RED, end="")
             print(act, "-->", end="")
             if (child != None):
-                child.display(max)
+                child.display(max, winrate_high, visits_high, puct_high, ucb1_high)
                 if deepness < 2:
                     print("")
                 elif act != node.state.actions()[-1]:
