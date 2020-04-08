@@ -212,16 +212,14 @@ class state():
                         print(PURPLE + '*' + RESET, end="")
                     elif vic_1 != "":
                         if vic_1 == 'X':
-                            print(RED, end="")
+                            print(YELLOW + 'x' + RESET, end="")
                         else:
-                            print(BLUE, end="")
-                        print('-' + RESET, end="")
+                            print(YELLOW + 'o' + RESET, end="")
                     elif vic_2 != "":
                         if vic_2 == 'X':
-                            print(RED, end="")
+                            print(YELLOW + 'x' + RESET, end="")
                         else:
-                            print(BLUE, end="")
-                        print('+' + RESET, end="")
+                            print(YELLOW + 'o' + RESET, end="")
                     else:
                         print('.' + RESET, end="")
                 else:
