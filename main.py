@@ -33,6 +33,8 @@ from time import sleep
 from listy import ft_progress
 import time
 from data import Dataseto
+import torch.optim as optim
+import torch 
 
 cache = "cache_MCTS_tree"
 
@@ -43,9 +45,6 @@ def save_state(s_object, file_name = cache):
         if (type(s_object) == type(MCTS())):
             print("Successful, tree size = ", s_object.size)
 
-def dirty_save(s_object, file_name):
-    pickle.dump(s_object, open(file_name, 'wb'))
-    print("Save of cache successful, tree size = ", s_object.size)
 
 def load_state(file_name = cache):
     print("Load cache from ", file_name)
@@ -57,49 +56,63 @@ def load_state(file_name = cache):
 
 
 if __name__ == "__main__":
-#    try:
-#        jo = load_state()
-#    except:
-#        print("New MCTS")
-#        jo = MCTS()
-#    iterations = 1
-#    try:
-#        dataset = load_state("cache_dataset")
-#        for data in dataset.data:
-#            jo.dnn.train(data)
-#        dataset.data = []
-#    except:
-#        print("New dataset")
-#        dataset = dataset()
-#    print("How much times ", iterations, " should be run ?")
-#    how = input()
-#    try:
-#        how = int(how)
-#    except:
-#        how = 0
-#    k = 0
-#    while k < how:
-#        save_dnn = jo.dnn
-#        jo = MCTS(node(), dataset)
-#        jo.dnn = save_dnn
-#        for i in ft_progress(range(iterations)):
-#            jo.self_play_new_game()
-#        jo.display()
-#        save_state(dataset, "cache_dataset")
-#        for data in dataset.data:
-#            jo.dnn.train(data)
-#        dataset.data = []
-#        save_state(jo, cache)
-#
-#        k += 1
-#    jo.play_vs_MCTS()
-    #tree = load_state()
+    from train import patron
+    from deep import ConnectNet #MAYBE TO FLOAT
+    datasett = Dataseto()
+    patronn = patron(datasett)
+
     jo = MCTS()
     root = jo.tree_root
-    for _ in range(100):
+    for i in range(100):
         start = time.time()
         jo.self_play_new_game()
+        if (i == 50):
+            jo.dataset = datasett
         #jo.current_node.state.display()
-        jo.tree_root.print_n_floor(jo.tree_root, 0)
+        #jo.tree_root.print_n_floor(jo.tree_root, 0)
         print(time.time() - start)
-    #save_state(jo.tree_root)
+    
+    save_state(jo.tree_root)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    net = ConnectNet()
+    net.to(device)
+    
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    MSEloss = torch.nn.MSELoss()
+    CrossLoss = torch.nn.CrossEntropyLoss()
+    print("LOADED")
+    def cross_entropy(pred, soft_targets):
+        logsoftmax = torch.nn.LogSoftmax()
+        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+
+    def loss(P, V, PGT, VGT):
+        a = 2 * MSEloss(V.float(), VGT.float())
+        b = cross_entropy(P, PGT)
+        return (a + b)
+    
+    print("NETTED")
+    for weshwesh in range(10):
+        trainiloader = torch.utils.data.DataLoader(datasett, batch_size=8, shuffle=True, num_workers=1)
+        for epoch in range(10):  # loop over the dataset multiple times
+
+            running_loss = 0.0
+            SUP = None
+            for i, data in enumerate(trainiloader, 0):
+                # get the inputs; data is a list of [inputs, labels]
+                S, PGT, VGT = data[0].to(device), data[1].to(device), data[2].to(device)
+                # zero the parameter gradients
+                optimizer.zero_grad()
+
+                # forward + backward + optimize
+                P, V = net(S)
+                losses = loss(P, V, PGT, VGT) / 8
+                losses.backward()
+                optimizer.step()
+                # print statistics
+                running_loss += losses.item()
+            print('[%d, %5d] 100 * loss: %.3f' % (epoch + 1, i + 1, running_loss  *100 / i))
+                
+
+    print('Finished Training')
+    torch.cuda.empty_cache()
+        #save_state(jo.tree_root)

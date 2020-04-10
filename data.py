@@ -65,5 +65,5 @@ class Dataseto(data.Dataset):
         '''
             converts state and policy to tensors and adds them
         '''
-        self.data.append(datapoint(torch.from_numpy(state.encode_board()), torch.from_numpy(policy)))
+        self.data.append(datapoint(torch.from_numpy(state.encode_board()).float(), torch.from_numpy(policy).float()))
         return (len(self.data) - 1)

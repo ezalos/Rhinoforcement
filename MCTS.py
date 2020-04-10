@@ -6,7 +6,6 @@ import time
 from color import *
 from deep import Deep_Neural_Net
 import numpy
-from data import dataset
 from data import datapoint
 import numpy as np
 import sklearn
@@ -84,7 +83,6 @@ class MCTS():
             self.current_node = self.root
             self.current_node.state.copy(initial_state)
             self.MCTS_to_reward()
-        
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
         policy = self.policy_policy()
@@ -132,12 +130,6 @@ class MCTS():
         policy = np.zeros(7, dtype=float)
         for action in node.actions:
             policy[action] = node.children.get(action).visits
-#        if (self.root.state.turn < 25): #DEFINE here
-#            temperature = 1
-#        else:
-#            temperature = 1   #SHOULD BE 0.1
-#        for idx in range(len(policy)):
-#            policy[idx] = policy[idx]**(1/temperature)
         summ = sum(policy)
         for action in node.actions:
             policy[action] = policy[action] / summ

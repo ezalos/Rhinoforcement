@@ -11,15 +11,14 @@ import numpy as np
 LAYERS = 64
 RESBLOCKS = 7
 K_SIZE = 3
-
-input[0-batch_size][N][H][W]
+RESIDUAL_TOWER_SIZE = 7
 
 class ResBlock(nn.Module):
     def __init__(self):
-        super(ResBlock, self).__init__()
-        self.conv1 = nn.Conv2d(LAYERS, LAYERS, K_SIZE)
+        super().__init__()
+        self.conv1 = nn.Conv2d(LAYERS, LAYERS, K_SIZE, padding=1)
         self.bn1 = nn.BatchNorm2d(LAYERS)
-        self.conv2 = nn.Conv2d(LAYERS, LAYERS, K_SIZE)
+        self.conv2 = nn.Conv2d(LAYERS, LAYERS, K_SIZE, padding=1)
         self.bn2 = nn.BatchNorm2d(LAYERS)
     
     def forward(self, x):
@@ -36,19 +35,63 @@ class ResBlock(nn.Module):
 class ConvBlock(nn.Module):
     def __init__(self):
         super(ConvBlock, self).__init__()
-        self.conv = nn.Conv2d(3, LAYERS, K_SIZE)
+        self.conv = nn.Conv2d(3, LAYERS, K_SIZE, padding=1)
         self.bn = nn.BatchNorm2d(LAYERS)
     
     def forward(self, x):
         x = self.conv(x)
         x = self.bn(x)
         x = F.relu(x)
-
+        return (x)
 
 class HeadBlock(nn.Module):
     def __init__(self):
         super(HeadBlock, self).__init__()
-        self.conv()    
+        self.conv1 = nn.Conv2d(LAYERS, 1, 1, padding=0) #value head
+        self.bn1 = nn.BatchNorm2d(1)
+        self.lin1 = nn.Linear(6 * 7, 7)
+        #self.lin2 = nn.Linear(42, 20)
+        self.lin3 = nn.Linear(7, 1)
+        self.conv2 = nn.Conv2d(LAYERS, 2, 1, padding=0)
+        self.bn2 = nn.BatchNorm2d(2)
+        self.lin4 = nn.Linear(2 * 7 * 6, 7)
+
+    def forward(self, x):
+        v = self.conv1(x)
+        v = self.bn1(v)
+        v = v.view(-1, 6 * 7)
+
+        v = F.relu(v)
+        v = self.lin1(v)
+        v = F.relu(v)
+        v = self.lin3(v)
+
+        v = torch.tanh(v)
+
+        p = self.conv2(x)
+        p = self.bn2(p)
+        p = F.relu(p)
+        p = p.view(-1, 2 * 6 * 7)
+        p = self.lin4(p)
+
+        return p, v
+
+class ConnectNet(nn.Module):
+    def __init__(self):
+        super(ConnectNet, self).__init__()
+        self.conv = ConvBlock()
+        for block in range(RESIDUAL_TOWER_SIZE):
+            setattr(self, "res_%i" % block,ResBlock())
+        self.outblock = HeadBlock()
+    
+    def forward(self,s):
+        s = self.conv(s)
+        for block in range(RESIDUAL_TOWER_SIZE):
+            s = getattr(self, "res_%i" % block)(s)
+        p, v = self.outblock(s)
+        return p, v
+
+
 
 #
 #class ConvBlock(nn.Module):
@@ -108,21 +151,6 @@ class HeadBlock(nn.Module):
 #        p = self.logsoftmax(p).exp()
 #        return p, v
 #    
-class ConnectNet(nn.Module):
-    def __init__(self):
-        super(ConnectNet, self).__init__()
-        self.conv = ConvBlock()
-        for block in range(5):
-            setattr(self, "res_%i" % block,ResBlock())
-        self.outblock = OutBlock()
-    
-    def forward(self,s):
-        s = self.conv(s)
-        for block in range(5):
-            s = getattr(self, "res_%i" % block)(s)
-        s = self.outblock(s)
-        return s
-        
 
 class AlphaLoss(torch.nn.Module):
     def __init__(self):
