@@ -4,7 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 import matplotlib
-matplotlib.use("Agg")
+#matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
@@ -98,96 +99,132 @@ class ConnectNet(nn.Module):
 class AlphaLoss(torch.nn.Module):
     def __init__(self):
         super(AlphaLoss, self).__init__()
+        self.MSE = torch.nn.MSELoss()
 
+    def cross_entropy(self, pred, soft_targets):
+        logsoftmax = torch.nn.LogSoftmax()
+        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+    
     def forward(self, y_value, value, y_policy, policy):
-        value_error = (value - y_value) ** 2
-        policy_error = torch.sum((-policy* 
-                                  (1e-8 + y_policy.float()).float().log()), 1)
-        total_error = (value_error.view(-1).float() + policy_error).mean()
-        return total_error
+        value = value.view(-1,1)
+        y_value = y_value.view(-1,1)
+        a = self.MSE(value.float(), y_value.float())
+        b = self.cross_entropy(policy, y_policy)
+        return (a + b)
 
-class Deep_Neural_Net():
-    def __init__(self):
-        self.temp = 1
-        self.deep_neural_net = ConnectNet()
-        self.policy = None
-        self.value = None
-        self.version = 0
-
-    def convert_state(self, state):
-        encoded_s = state.encode_board();
-        encoded_s = encoded_s.transpose(2,0,1)
-        encoded_s = torch.from_numpy(encoded_s).float()#.cuda()
-        self.encoded_state = encoded_s
-
-    def run(self):
-        policy, value = self.deep_neural_net(self.encoded_state)
-        self.policy = policy.detach().cpu().numpy().reshape(-1);
-        self.value = value.item()
-        return policy, value
+from save_load import *
 
 class Training():
-    def __init__(self, DNN):
+    def __init__(self, DNN = ConnectNet()):
+        #                           Min         Default     Max
         #self.num_epochs = 5
-        self.total_epochs = 5
+        self.total_epochs = 10      #5          10          15
         self.num_classes = 10
-        self.batch_size = 100
-        self.learning_rate = 0.001
+        self.batch_size = 5         #32         64          96
+        self.learning_rate = 0.001  #0.001      0.005       0.01
         self.total_loss_epoch = []
         self.show = 0
+        self.cache_directory = "DNN/"
+        self.save_rate = 10
+        self.version = 0
         self.initialize(DNN)
 
     def initialize(self, DNN):
         self.DNN = DNN
-        self.optimizer = optim.Adam(self.DNN.deep_neural_net.parameters(), lr=self.learning_rate, betas=(0.8, 0.999))
+        self.optimizer = optim.Adam(self.DNN.parameters(), lr=self.learning_rate, betas=(0.8, 0.999))
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50,100,150,200,250,300,400], gamma=0.77)
         self.criterion = AlphaLoss()
 
     def backprop(self):
         #Backprop and perform Adam optimization
-        self.optimizer.zero_grad()#clears x.grad for every parameter x in the optimizer
-        self.loss.backward()#computes dloss/dx for every parameter x 
         self.optimizer.step()#updates the value of x using the gradient x.grad
+        self.optimizer.zero_grad()#clears x.grad for every parameter x in the optimizer
 
     def forward_pass(self, data):
         #Get data ready
-        self.DNN.convert_state(data.S)
-        value = torch.from_numpy(data.V).float()
-        policy = torch.from_numpy(data.P).float()
+        #self.DNN.convert_state(data.S)
+        S, policy, value = data
         #Run forward pass
-        policy_pred, value_pred = self.DNN.run()
+        #policy_pred, value_pred = self.DNN.run()
+        policy_pred, value_pred = self.DNN(S)
         if self.show:
             data.display()
             print("V:    ", value)
             print("V_y:  ", value_pred)
             print("P:    ", policy)
             print("P_y:  ", policy_pred)
-        self.loss = self.criterion(value_pred[:,0], value, policy_pred, policy)
+        self.loss = self.criterion(value_pred[:,0], value, policy_pred, policy) / self.total_step
+        self.loss.backward()#computes dloss/dx for every parameter x 
 
     def keep_track_of_numbers(self, i, epoch):
         self.total_loss += self.loss.item()#Loss is the sum of differencies for v & v_y
         self.loss_list.append(self.loss.item())
-        #if (i + 1) % self.batch_size == 0:
         print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
             .format(epoch + 1, self.total_epochs, i + 1, self.total_step, self.loss.item()))
 
     def train(self, dataset):
-        print("\n\nTRAINING DNN")
+        print("\n\nTRAINING DNN ", self.version)
         for epoch in range(self.total_epochs):
+            trainloader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=1)
+            self.total_step = len(trainloader)
             self.total_loss = 0.0
-            self.total_step = len(dataset.data)
             self.loss_list = []
-            for i, data in enumerate(dataset.data, 0):#should be a fraction of data set of size batch_size
+            for i, data in enumerate(trainloader, 0):#should be a fraction of data set of size batch_size
                 self.forward_pass(data)
-                self.backprop()
                 self.keep_track_of_numbers(i, epoch)
+            self.backprop()
             self.scheduler.step()#it change the learning rate
             self.total_loss_epoch.append(self.total_loss)
-            print("Total loss:    ", self.total_loss)
-            print("Relative loss: ", self.total_loss / self.total_step)
-        self.DNN.version += 1
+            print("\tEpoch ", epoch, "\tTotal loss:    ", self.total_loss)
+        self.version += 1
+        self.graph_data()
+        if self.version % self.save_rate == 0:
+            self.save()
 
+    def save(self):
+        file_name = self.get_name()
+        save_cache(self, self.cache_directory + file_name)
 
+    def load(self):
+        file_to_load = get_list_of_files(self.cache_directory)
+        if file_to_load != None:
+            print("Loading...")
+            cache = load_cache(self.cache_directory + file_to_load)
+            if cache != None:
+                self.version = cache.version
+                self.total_epochs = cache.total_epochs
+                self.batch_size = cache.batch_size
+                self.learning_rate = cache.learning_rate
+                self.total_loss_epoch = cache.total_loss_epoch
+                self.initialize(cache.DNN)
+                print("Success!")
+            else:
+                print("Failure!")
+        else:
+            print("Loading canceled")
+
+    def get_name(self, on=True):
+        file_name = ""
+        if on:
+            file_name += "V" + str(self.version) 
+        file_name += "_E" + str(self.total_epochs) 
+        file_name += "_B" + str(self.batch_size)
+        file_name += "_LR" + str(self.learning_rate)
+        return file_name
+
+    def graph_data(self):
+        self.path = "./graphs/"
+        plt.plot(self.total_loss_epoch)
+        plt.savefig(self.path + "All_epochs_" + self.get_name(False) + ".png")
+        plt.clf()
+        plt.plot(self.total_loss_epoch[0::self.total_epochs])
+        plt.plot(self.total_loss_epoch[self.total_epochs - 1::self.total_epochs])
+        plt.savefig(self.path + "First_and_Last_epochs_" + self.get_name(False) + ".png")
+        plt.clf()
+        for one in range(self.total_epochs):
+            plt.plot(self.total_loss_epoch[one::self.total_epochs])
+        plt.savefig(self.path + "All_by_epochs_" + self.get_name(False) + ".png")
+        plt.clf()
 
 
 

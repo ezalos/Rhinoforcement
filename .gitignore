@@ -4,5 +4,5 @@
 test
 __pycache__
 *.pyc
-cache_*
+cache
 tree_data/*

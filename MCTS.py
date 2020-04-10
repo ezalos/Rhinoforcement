@@ -4,17 +4,18 @@ import copy
 import random
 import time
 from color import *
-from deep import Deep_Neural_Net
+from deep import ConnectNet
 import numpy
-from data import dataset
+from data import Dataseto
 from data import datapoint
 import numpy as np
 import sklearn
+import torch
 
 DEBUG = 0
 class MCTS():
 
-    def __init__(self, node = node(), dataset = dataset(), tree_policy = None, rollout_policy = None):
+    def __init__(self, node = node(), dataset = Dataseto(), tree_policy = None, rollout_policy = None):
         '''
             tree policy takes a node and returns an action, rollout_policy takes a node and retruns a value.
         '''
@@ -31,7 +32,8 @@ class MCTS():
             self.rollout_policy = rollout_policy
         else:
             self.rollout_policy = lambda : self.simulate()
-        self.dnn = Deep_Neural_Net()
+        self.dnn = ConnectNet()
+        self.verbose = 0
 
     def launch(self):
         self.current_node = self.tree_root
@@ -75,9 +77,9 @@ class MCTS():
             return -v
         print(" YOOOOOO FUCKED UP BROOOO")
 
-    def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
+    def self_play(self, dataset = Dataseto(), iterations = 400): # DIRICHELET NMOISE
         if (self.root.is_terminal):
-            if True:
+            if self.verbose:
                 self.root.state.display()
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
@@ -90,7 +92,7 @@ class MCTS():
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
         
-        if True:
+        if self.verbose:
             self.root.state.display()
             self.root.print_n_floor(node=self.root, limit=0)
         
@@ -102,7 +104,7 @@ class MCTS():
         self.play_action(action)
         self.root = self.current_node
         v = self.self_play(dataset)
-        dataset.data[dataset_index].V = np.array([v])
+        dataset.data[dataset_index].V = torch.tensor([v])
         return -v
 
     def play_one_move(self, iterations = 400):
@@ -122,7 +124,7 @@ class MCTS():
         self.root = self.current_node
 
     def self_play_new_game(self):
-        print("new game")
+        #print("new game")
         self.root = self.tree_root
         self.current_node = self.root
         self.root.is_terminal = False
@@ -141,6 +143,7 @@ class MCTS():
         policy = np.zeros(7)
         for action in node.actions:
             policy[action] = node.children.get(action).visits
+        policy = (policy - policy.min()) / (policy.max() - policy.min() + 1)
 #        if (self.root.state.turn < 25): #DEFINE here
 #            temperature = 1
 #        else:
@@ -257,7 +260,7 @@ class MCTS():
         return (best_action)
 
     def select(self):
-        return self.select_PUCT_policy()
+        #self.select_PUCT_policy()
         if (self.current_node.unexplored_babies > 0):
             return (self.select_UCB1_policy())
         else:

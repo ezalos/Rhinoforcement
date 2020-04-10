@@ -3,6 +3,7 @@ import random
 import math
 import copy
 from color import *
+import torch
 
 class node():
     def __init__(self, state = state(), parent = None):
@@ -73,23 +74,17 @@ class node():
                 if child.P == None or self.P_update < DNN.version:
                     self.P_update = DNN.version
                     if not run:
-                        DNN.convert_state(self.state)
-                        DNN.run()
+                        S = torch.from_numpy(self.state.encode_board()).float()
+                        with torch.no_grad():
+                            policy, _ = self.DNN(S)
                         run = 1
-                    child.P = DNN.policy[act]
+                    child.P = policy[act]
                     child.PUCT_ = (Q + (C * child.P * N))
                 PUCT.append(Q + (C * child.P * N))
             else:
                 PUCT.append(0)
         #print("Puct: ", PUCT)
         return PUCT
-        best_puct = -1234567890
-        pos = -1
-        for i in range(len(PUCT)):
-            if PUCT[i][0] > best_puct:
-                best_puct = PUCT[i][0]
-                pos = PUCT[i][1]
-        return pos
  
     def display(self, max_nb_size = 5, best_winrate=False, best_visits=False, best_puct=False, best_ucb1=False):
         print(" " * (max_nb_size - len(str(self.total_reward))), end="")
@@ -115,7 +110,8 @@ class node():
             print(BLUE, end="")
         else:
             print(RED, end="")
-        print("   PUCT ", str(self.PUCT_)[:7], end="")
+        if self.PUCT_ != None:
+            print("   PUCT ", str(self.PUCT_)[:7], end="")
         if best_ucb1:
             print(GREEN, end="")
         elif self.state.player == "O":
@@ -144,7 +140,7 @@ class node():
                 if (danger.UCB1() > best_UCB1):
                     best_UCB1 = danger.UCB1()
                     best_action_UCB1 = action
-                if (danger.PUCT_ > best_PUCT):
+                if danger.PUCT_ != None and (danger.PUCT_ > best_PUCT):
                     best_PUCT = danger.PUCT_
                     best_action_PUCT = action
                 if (danger.visits > max_visits):
