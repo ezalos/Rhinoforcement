@@ -125,7 +125,7 @@ class Training():
         self.total_loss_epoch = []
         self.show = 0
         self.cache_directory = "DNN/"
-        self.save_rate = 10
+        self.save_rate = 25
         self.version = 0
         self.initialize(DNN)
 

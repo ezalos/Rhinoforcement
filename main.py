@@ -24,7 +24,7 @@ if __name__ == "__main__":
     jo.dnn = train.DNN
     while jo.size < 0:
         jo.self_play_new_game()
-    for _ in range(52):
+    for _ in range(50):
         print("Size: ", jo.size)
         start = time.time()
         for i in range(5):
