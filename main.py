@@ -56,10 +56,8 @@ def load_state(file_name = cache):
 
 
 if __name__ == "__main__":
-    from train import patron
     from deep import ConnectNet #MAYBE TO FLOAT
     datasett = Dataseto()
-    patronn = patron(datasett)
 
     jo = MCTS()
     root = jo.tree_root

@@ -18,6 +18,21 @@ class state():
         self.turn = 0
         self.victory = ''
 
+
+    def is_game_over(self):
+        '''
+            returns 1, 0
+            assumes self.victory has been updated (done everytime we drop_piece)
+        '''
+        if self.victory == ".":
+            return (0.0000000001)
+        elif self.victory == "X":
+            return (1.0)
+        elif self.victory == "O":
+            return (1.0)
+        else:
+            return (0.0)
+
     def do_action(self, column):
         '''
             changes player, turn and victory
@@ -133,6 +148,13 @@ class state():
                 acts.append(col)
         return acts
 
+    def valid_moves_mask(self):
+        valid = np.zeros([MAX_COLS])
+        for col in range(MAX_COLS):
+            if self.board[0, col] == " ":
+                valid[col] = 1
+        return (valid)
+
     def reset(self):
         self.player = "X"
         self.last_move = [-1,-1]
@@ -206,5 +228,5 @@ class state():
             print("Victory: ", self.victory)
         print('\n', end="")
 
-
-
+    def stringify(self):
+        return (str(self.last_move) + np.array_repr(self.board) + self.player)

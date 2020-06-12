@@ -2,16 +2,17 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 from torch.utils.data import Dataset
 import matplotlib
 
 import numpy as np
-
+from state import state
 
 LAYERS = 64
 RESBLOCKS = 7
 K_SIZE = 3
-RESIDUAL_TOWER_SIZE = 7
+RESIDUAL_TOWER_SIZE = 3
 
 class ResBlock(nn.Module):
     def __init__(self):
@@ -91,7 +92,50 @@ class ConnectNet(nn.Module):
         p, v = self.outblock(s)
         return p, v
 
+    def evaluate(self, unencoded_s):
+        s = torch.from_numpy(unencoded_s.encode_board()).float()
+        return (self.forward(s))
 
+class NetHandler():
+    def __init__(self, net, args):
+        self.net = net
+        self.args = args
+
+    def cross_entropy(self, pred, soft_targets):
+        logsoftmax = torch.nn.LogSoftmax()
+        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+
+
+    def loss(self, P, V, PGT, VGT):
+        MSEloss = torch.nn.MSELoss()
+        a = MSEloss(V.float(), VGT.float())
+        b = MSEloss(P.float(), PGT.float()) * 7
+        return (b + a)    
+
+    def train(self, trainloader):
+
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        net = self.net
+        net.to(device)
+        net.train()
+        optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False) ##wtf is this the right one ??
+
+        for epoch in range(self.args.Epochs):  # loop over the dataset multiple times
+            running_loss = 0.0
+            for i, data in enumerate(trainloader, 0):
+                # get the inputs; data is a list of [inputs, labels]
+                S, PGT, VGT = data[0].to(device), data[1].to(device), data[2].to(device)
+                # zero the parameter gradients
+                optimizer.zero_grad()
+                # forward + backward + optimize
+                P, V = net(S)
+                losses = self.loss(P, V, PGT, VGT)
+                losses.backward()
+                optimizer.step()
+                # print statistics
+                running_loss += losses.item()
+            print('[%d, %5d] 100 * loss: %.3f' % (epoch + 1, i + 1, running_loss / len(trainloader)))
+        print('Finished Training')
 
 #
 #class ConvBlock(nn.Module):
@@ -151,67 +195,6 @@ class ConnectNet(nn.Module):
 #        p = self.logsoftmax(p).exp()
 #        return p, v
 #    
-
-class AlphaLoss(torch.nn.Module):
-    def __init__(self):
-        super(AlphaLoss, self).__init__()
-
-    def forward(self, y_value, value, y_policy, policy):
-        value_error = (value - y_value) ** 2
-        policy_error = torch.sum((-policy* 
-                                (1e-8 + y_policy.float()).float().log()), 1)
-        total_error = (value_error.view(-1).float() + policy_error).mean()
-        return total_error
-
-class Deep_Neural_Net():
-    def __init__(self):
-        self.temp = 1
-        self.deep_neural_net = ConnectNet()
-        self.policy = None
-        self.value = None
-    
-    def convert_state(self, state):
-        encoded_s = state.encode_board();
-        encoded_s = encoded_s.transpose(2,0,1)
-        encoded_s = torch.from_numpy(encoded_s).float()#.cuda()
-        self.encoded_state = encoded_s
-
-    def run(self):
-        policy, value = self.deep_neural_net(self.encoded_state)
-        self.policy = policy.detach().cpu().numpy().reshape(-1);
-        self.value = value.item()
-        return policy, value
-
-    def train(self, data):
-        print("\n\nTRAINING DNN")
-        data.display()
-        self.convert_state(data.S)
-        value = torch.from_numpy(data.V).float()
-        policy = torch.from_numpy(data.P).float()
-
-        policy_pred, value_pred = self.run()
-        
-        print("V:    ", value)
-        print("V_y:  ", value_pred)
-        print("P:    ", policy)
-        print("P_y:  ", policy_pred)
-
-        criterion = AlphaLoss()
-        loss = criterion(value_pred[:,0], value, policy_pred, policy)
-        #loss = loss/args.gradient_acc_steps
-        loss.backward()
-        print("loss: ", loss)
-        #if (epoch % args.gradient_acc_steps) == 0:
-        #    optimizer.step()
-        #    optimizer.zero_grad()
-        #total_loss += loss.item()
-
-
-
-
-
-
-
 
 
 
