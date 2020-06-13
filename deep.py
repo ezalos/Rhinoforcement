@@ -45,17 +45,13 @@ class ConvBlock(nn.Module):
         x = F.relu(x)
         return (x)
 
-class HeadBlock(nn.Module):
+class ValueHead(nn.Module):
     def __init__(self):
-        super(HeadBlock, self).__init__()
-        self.conv1 = nn.Conv2d(LAYERS, 1, 1, padding=0) #value head
+        super(ValueHead, self).__init__()
+        self.conv1 = nn.Conv2d(LAYERS, 1, kernel_size=1) #value head
         self.bn1 = nn.BatchNorm2d(1)
-        self.lin1 = nn.Linear(6 * 7, 7)
-        #self.lin2 = nn.Linear(42, 20)
-        self.lin3 = nn.Linear(7, 1)
-        self.conv2 = nn.Conv2d(LAYERS, 2, 1, padding=0)
-        self.bn2 = nn.BatchNorm2d(2)
-        self.lin4 = nn.Linear(2 * 7 * 6, 7)
+        self.lin1 = nn.Linear(6 * 7, 256)
+        self.lin2 = nn.Linear(256, 1)
 
     def forward(self, x):
         v = self.conv1(x)
@@ -65,17 +61,32 @@ class HeadBlock(nn.Module):
 
         v = self.lin1(v)
         v = F.relu(v)
-        v = self.lin3(v)
+        v = self.lin2(v)
 
-        v = torch.tanh(v)
+        v = F.tanh(v)
 
-        p = self.conv2(x)
-        p = self.bn2(p)
+        return v
+
+class PolicyHead(nn.Module):
+    def __init__(self):
+        super(PolicyHead, self).__init__()
+        self.conv = nn.Conv2d(LAYERS, 1, kernel_size=1)
+        self.bn = nn.BatchNorm2d(1)
+        self.logsoftmax = nn.LogSoftmax(dim=1)
+        self.lin = nn.Linear(6 * 7, 7)
+
+    def forward(self, x):
+
+        p = self.conv(x)
+        p = self.bn(p)
         p = F.relu(p)
-        p = p.view(-1, 2 * 6 * 7)
-        p = self.lin4(p)
+        p = p.view(-1, 6 * 7)
+        p = self.lin(p)
+        p = self.logsoftmax(p).exp()
 
-        return p, v
+        return p
+
+
 
 class ConnectNet(nn.Module):
     def __init__(self):
@@ -83,13 +94,15 @@ class ConnectNet(nn.Module):
         self.conv = ConvBlock()
         for block in range(RESIDUAL_TOWER_SIZE):
             setattr(self, "res_%i" % block,ResBlock())
-        self.outblock = HeadBlock()
+        self.PolicyHead = PolicyHead()
+        self.ValueHead = ValueHead()
     
     def forward(self,s):
         s = self.conv(s)
         for block in range(RESIDUAL_TOWER_SIZE):
             s = getattr(self, "res_%i" % block)(s)
-        p, v = self.outblock(s)
+        p = self.PolicyHead(s)
+        v = self.ValueHead(s)
         return p, v
 
     def evaluate(self, unencoded_s):
