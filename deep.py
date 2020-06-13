@@ -41,7 +41,7 @@ class ConvBlock(nn.Module):
     
     def forward(self, x):
         x = self.conv(x)
-        x = self.bn(x)
+        x = self.bn(x)  
         x = F.relu(x)
         return (x)
 
@@ -60,9 +60,9 @@ class HeadBlock(nn.Module):
     def forward(self, x):
         v = self.conv1(x)
         v = self.bn1(v)
+        v = F.relu(v)
         v = v.view(-1, 6 * 7)
 
-        v = F.relu(v)
         v = self.lin1(v)
         v = F.relu(v)
         v = self.lin3(v)
@@ -94,7 +94,9 @@ class ConnectNet(nn.Module):
 
     def evaluate(self, unencoded_s):
         s = torch.from_numpy(unencoded_s.encode_board()).float()
-        return (self.forward(s))
+        t = s.new_empty(1, 3, 6, 7)  ## create batch of size 1
+        t[0] = s
+        return (self.forward(t))
 
 class NetHandler():
     def __init__(self, net, args):

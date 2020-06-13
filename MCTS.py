@@ -242,12 +242,98 @@ class MCTS():
         self.Ns[s] += 1
         return -v
 
+    def search_net(self, state, net):
+        state_string = state.stringify()
+        if (state_string not in self.Ts): #terminal states
+            self.Ts[state_string] = state.is_game_over()
+        if (self.Ts[state_string] != 0):
+            return (self.Ts[state_string])
+
+        if (state_string not in self.Ps): #LEAF
+            P, V = net.evaluate(state)
+            valid_moves = state.valid_moves_mask()
+            self.Ps[state_string] = valid_moves
+            #self.Ps[state_string] = self.Ps[state_string] * valid_moves #verify product
+            sum = np.sum(self.Ps[state_string])
+            if (sum > 0): #here we assume elements of PS are positive !!
+                self.Ps[state_string] = self.Ps[state_string] / sum
+            else: #all valid moves have p = 0
+                print("no valid moves in Ps[State]")
+                self.Ps[state_string] = valid_moves
+                self.Ps[state_string] /= np.sum(self.Ps[state_string])
+        
+            self.Ms[state_string] = valid_moves
+            self.Ns[state_string] = 0
+            value = self.simulate(state)
+            return value
+
+
+        #"Normal" node
+        best_UCB = -123456789
+        best_action = None
+
+        for action in state.actions():
+            if (state_string, action) in self.Qsa:
+                #u = self.Qsa[(state_string, action)] + self.args.CPUCT*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string])/(1+self.Nsa[(state_string,action)])
+                u = self.Qsa[(state_string, action)] + self.args.cexplo * math.sqrt(math.log(self.Ns[state_string]) / self.Nsa[(state_string, action)])
+            else:
+                #u = self.args.cpuct*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string] + 0.00000001) # Q could be initializerd by network here
+                u = 123456
+            if u > best_UCB:
+                best_UCB = u
+                best_action = action
+        a = best_action
+        
+        state.do_action(a) #state is now next_state
+        v = self.search(state)
+
+        if ((state_string, a) in self.Qsa):
+            self.Qsa[(state_string, a)] = (self.Qsa[(state_string, a)] * self.Nsa[(state_string, a)] + v) / (self.Nsa[(state_string, a)] + 1)
+            self.Nsa[(state_string, a)] += 1
+        else:
+            self.Qsa[(state_string, a)] = v
+            self.Nsa[(state_string, a)] = 1
+        #print("Player: ", playa, "winner: ", winner, "v: ", v)
+        self.Ns[state_string] += 1
+        return -v
+
+    def self_play_net(self, net, dataset = Dataseto(), root = state(), iterations = 400, turn = 0): # DIRICHELET NMOISE
+        s = root.stringify()
+        if (s not in self.Ts): #terminal states
+            self.Ts[s] = root.is_game_over()
+        if (self.Ts[s] != 0):
+            return (self.Ts[s])
+
+        for _ in range(iterations):
+            current_state = copy.deepcopy(root)
+            self.search(current_state)
+
+        temperature = 1
+        if (turn > 12):
+            temperature = 0.1
+        policy = self.get_policy(root, temperature)
+        dataset_index = dataset.add_point(state=root, policy=policy)
+        action = np.random.choice(7, 1, p=policy)[0] ## GET MAX F(Q + U)
+        root.do_action(action)
+        v = self.self_play(dataset, root, iterations, turn + 1)
+
+        dataset.data[dataset_index].V = torch.tensor([v])
+        if ((s, action) in self.Qsa):
+            self.Qsa[(s, action)] = (self.Qsa[(s, action)] * self.Nsa[(s, action)] + v) / (self.Nsa[(s, action)] + 1)
+            self.Nsa[(s, action)] += 1
+        else:
+            self.Qsa[(s, action)] = v
+            self.Nsa[(s, action)] = 1
+        self.Ns[s] += 1
+        return -v
+
     def	play_vs_MCTS(self):
         turn = 0
         stat = state()
         while (stat.is_game_over() == 0):
             if (turn % 2 == 0):
-                self.self_play(root = copy.deepcopy(stat))
+                self.self_play(root = copy.deepcopy(stat), turn = turn)
+                self.self_play(root = copy.deepcopy(stat), turn = turn)
                 stat.do_action(self.get_policy(stat).argmax())
             else:
                 move = -1
