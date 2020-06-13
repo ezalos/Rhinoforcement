@@ -27,7 +27,6 @@ import copy
 import logging
 import pickle
 
-from data import dataset
 import sys
 from time import sleep
 from listy import ft_progress

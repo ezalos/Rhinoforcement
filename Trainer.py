@@ -1,4 +1,4 @@
-from MCTS import MCTSO
+from MCTS import MCTS
 from MCTS import DotDict
 from state import state
 import copy
@@ -28,7 +28,7 @@ ARGS = DotDict({
     'Epochs': 10000
 })
 
-def self_play(MC):
+def self_play(MCTS):
     game = state()
     value = 0
     while (game.victory == ''):
@@ -46,7 +46,7 @@ def printo(MC, state = state()):
         print("N: ", MC.Nsa[(s, i)])
 
 #net = ConnectNet()
-#jo = MCTSO(net)
+#jo = MCTS(net)
 #dd = Dataseto()
 #v = 0
 #for i in range(100):
@@ -56,7 +56,7 @@ def printo(MC, state = state()):
 
 class Trainer():
     def __init__(self, net= ConnectNet(), args = ARGS):
-        self.MCTS = MCTSO(net, args)
+        self.MCTS = MCTS(net, args)
         self.dataHandler = DataHandler(args)
         self.args = args
         self.net = net
@@ -67,7 +67,7 @@ class Trainer():
         dataset = Dataseto()
         i = 0
         while len(dataset) < 1000:
-            MCTS = MCTSO(self.net, self.args)
+            MCTS = MCTS(self.net, self.args)
             MCTS.self_play(dataset=dataset, root=state())
             i += 1
             print(i)

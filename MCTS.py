@@ -48,7 +48,7 @@ ARGS = DotDict({
     'numItersForTrainExamplesHistory': 20,
 })
 
-class MCTSO():
+class MCTS():
     def __init__(self, net, args=ARGS):
         self.net = net
         self.args = args
@@ -242,10 +242,24 @@ class MCTSO():
         self.Ns[s] += 1
         return -v
 
+    def	play_vs_MCTS(self):
+        turn = 0
+        stat = state()
+        while (stat.is_game_over() == 0):
+            if (turn % 2 == 0):
+                self.self_play(root = copy.deepcopy(stat))
+                stat.do_action(self.get_policy(stat).argmax())
+            else:
+                move = -1
+                while (not(move >= 0 and move < 7)):
+                    move = int(input("press a key between 0 an 9\n"))
+                stat.do_action(move)
+            stat.display()
+            turn += 1
+
 
 
 class OLD():
-
     def __init__(self, node = node(), dataset = Dataseto(), tree_policy = None, rollout_policy = None):
         '''
             tree policy takes a node and returns an action, rollout_policy takes a node and retruns a value.
