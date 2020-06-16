@@ -14,7 +14,6 @@ class node():
         self.Q = None
         self.P = None
         self.children = {}
-        self.P = None
         self.actions = self.state.actions()
         self.unexplored_babies = len(self.actions)
         self.is_fully_expanded = (len(self.actions) == len(self.children))
@@ -42,7 +41,7 @@ class node():
 
     def do_action(self, action):
         '''
-            does action
+            does action INCREASES self.Na[action]
         '''
         if (self.unexplored_babies > 0):
             self.unexplored_babies -= 1

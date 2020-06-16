@@ -18,6 +18,21 @@ class state():
         self.turn = 0
         self.victory = ''
 
+
+    def is_game_over(self):
+        '''
+            returns 1, 0
+            assumes self.victory has been updated (done everytime we drop_piece)
+        '''
+        if self.victory == ".":
+            return (0.0000000001)
+        elif self.victory == "X":
+            return (1.0)
+        elif self.victory == "O":
+            return (1.0)
+        else:
+            return (0.0)
+
     def do_action(self, column):
         '''
             changes player, turn and victory
@@ -133,6 +148,13 @@ class state():
                 acts.append(col)
         return acts
 
+    def valid_moves_mask(self):
+        valid = np.zeros([MAX_COLS])
+        for col in range(MAX_COLS):
+            if self.board[0, col] == " ":
+                valid[col] = 1
+        return (valid)
+
     def reset(self):
         self.player = "X"
         self.last_move = [-1,-1]
@@ -156,14 +178,14 @@ class state():
                 self.board[row][col] = other.board[row][col]
 
     def encode_board(self):
-        encoded = np.zeros([MAX_ROWS, MAX_COLS, 3]).astype(int)
+        encoded = np.zeros([3, MAX_ROWS, MAX_COLS]).astype(float)
         player_conv = {"O":0, "X":1}
         for row in range(MAX_ROWS):
             for col in range(MAX_COLS):
                 pos = self.board[row, col]
+                encoded[2, row, col] = player_conv[self.player]
                 if pos != " ":
-                    encoded[row, col, player_conv[pos]] = 1
-        encoded[:,:,2] = player_conv[self.player]
+                    encoded[player_conv[pos], row, col] = 1.0
         return encoded
     
     def decode_board(self, encoded):
@@ -206,5 +228,5 @@ class state():
             print("Victory: ", self.victory)
         print('\n', end="")
 
-
-
+    def stringify(self):
+        return (str(self.last_move) + np.array_repr(self.board) + self.player)

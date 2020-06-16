@@ -4,17 +4,349 @@ import copy
 import random
 import time
 from color import *
-from deep import Deep_Neural_Net
+from deep import ConnectNet
 import numpy
-from data import dataset
 from data import datapoint
 import numpy as np
 import sklearn
+import torch
+import math
+from data import Dataseto
 
 DEBUG = 0
-class MCTS():
+# need net.evalueate to return P and Q as numpy array
+# make state.valid_moves_mask to return bool array / 1 0 array
 
-    def __init__(self, node = node(), dataset = dataset(), tree_policy = None, rollout_policy = None):
+
+
+class DotDict(dict):
+    """
+    a dictionary that supports dot notation 
+    as well as dictionary access notation 
+    usage: d = DotDict() or d = DotDict({'val1':'first'})
+    set attributes: d.val2 = 'second' or d['val2'] = 'second'
+    get attributes: d.val2 or d['val2']
+    """
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+ARGS = DotDict({
+    'numIters': 1000,
+    'numEps': 100,              # Number of complete self-play games to simulate during a new iteration.
+    'tempThreshold': 15,        #
+    'updateThreshold': 0.6,     # During arena playoff, new neural net will be accepted if threshold or more of games are won.
+    'maxlenOfQueue': 200000,    # Number of game examples to train the neural networks.
+    'numMCTSSims': 25,          # Number of games moves for MCTS to simulate.
+    'arenaCompare': 40,         # Number of games to play during arena play to determine if new net will be accepted.
+    'cpuct': 1,
+    'cexplo': 2,
+    'verbose': 0,
+    'checkpoint': './temp/',
+    'load_model': False,
+    'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
+    'numItersForTrainExamplesHistory': 20,
+})
+
+class MCTS():
+    def __init__(self, net, args=ARGS):
+        self.net = net
+        self.args = args
+        self.Qsa = {}       # Q values for s,a
+        self.Nsa = {}       # visit count for edge s,a
+        self.Ns = {}        # visit count board s
+        self.Ps = {}        # policy (returned by neural net)
+
+        self.Ts = {}        # stores is_terminal for board s
+        self.Ms = {}        # stores game.valid_moves_mask for board s
+    
+    def get_policy(self, state, temperature = 1):
+        s = state.stringify()
+        out = np.zeros([7]) #DEFINE
+        for act in state.actions():
+            out[act] = self.Nsa[(s, act)] if (s, act) in self.Nsa else 0
+        
+        policy = np.zeros([7])
+        if (temperature == 0):
+            policy[out.argmax()] = 1
+            return (policy)
+        
+        for act in state.actions():
+            policy[act] = out[act]**(1.0 / temperature)
+        summ = sum(policy)
+        for act in state.actions():
+            policy[act] = policy[act] / summ
+
+        return policy
+
+    def simulate(self, statee = None):
+        '''
+            plays random moves until the game ends.
+            returns the winner as a string
+        '''
+        if statee == None:
+            print("FAK NO state IN SIMULATOR")
+        state = copy.deepcopy(statee) # maybe remove this later
+        while state.victory is '':
+            actions = state.actions()
+            move = random.randint(0, len(actions) - 1)
+            play = actions[move]
+            state.do_action(play)
+
+        winner = state.victory
+        if (winner == statee.player): #check this bs
+            v = -1.0
+        elif (winner == "."):
+            v = 0.000001
+        else:
+            v = 1.0
+        return v
+
+    def search_UCB1(self, state):
+        state_string = state.stringify()
+        if (state_string not in self.Ts): #terminal states
+            self.Ts[state_string] = state.is_game_over()
+        if (self.Ts[state_string] != 0):
+            return (self.Ts[state_string])
+
+        if (state_string not in self.Ps): #LEAF
+            #self.Ps[state_string], value = self.net.evaluate(torch.from_numpy(state.encode_board()).float())
+            valid_moves = state.valid_moves_mask()
+            self.Ps[state_string] = valid_moves
+            #self.Ps[state_string] = self.Ps[state_string] * valid_moves #verify product
+            sum = np.sum(self.Ps[state_string])
+            if (sum > 0): #here we assume elements of PS are positive !!
+                self.Ps[state_string] = self.Ps[state_string] / sum
+            else: #all valid moves have p = 0
+                print("no valid moves in Ps[State]")
+                self.Ps[state_string] = valid_moves
+                self.Ps[state_string] /= np.sum(self.Ps[state_string])
+        
+            self.Ms[state_string] = valid_moves
+            self.Ns[state_string] = 0
+            value = self.simulate(state)
+            return value
+
+
+        #"Normal" node
+        best_UCB = -123456789
+        best_action = None
+
+        for action in state.actions():
+            if (state_string, action) in self.Qsa:
+                #u = self.Qsa[(state_string, action)] + self.args.CPUCT*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string])/(1+self.Nsa[(state_string,action)])
+                u = self.Qsa[(state_string, action)] + self.args.cexplo * math.sqrt(math.log(self.Ns[state_string]) / self.Nsa[(state_string, action)])
+            else:
+                #u = self.args.cpuct*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string] + 0.00000001) # Q could be initializerd by network here
+                u = 123456
+            if u > best_UCB:
+                best_UCB = u
+                best_action = action
+        a = best_action
+        
+        state.do_action(a) #state is now next_state
+        v = self.search(state)
+
+        if ((state_string, a) in self.Qsa):
+            self.Qsa[(state_string, a)] = (self.Qsa[(state_string, a)] * self.Nsa[(state_string, a)] + v) / (self.Nsa[(state_string, a)] + 1)
+            self.Nsa[(state_string, a)] += 1
+        else:
+            self.Qsa[(state_string, a)] = v
+            self.Nsa[(state_string, a)] = 1
+        #print("Player: ", playa, "winner: ", winner, "v: ", v)
+        self.Ns[state_string] += 1
+        return -v
+
+    def search(self, state):
+        state_string = state.stringify()
+        if (state_string not in self.Ts): #terminal states
+            self.Ts[state_string] = state.is_game_over()
+        if (self.Ts[state_string] != 0):
+            return (self.Ts[state_string])
+
+        if (state_string not in self.Ps): #LEAF
+            #self.Ps[state_string], value = self.net.evaluate(torch.from_numpy(state.encode_board()).float())
+            valid_moves = state.valid_moves_mask()
+            self.Ps[state_string] = valid_moves
+            #self.Ps[state_string] = self.Ps[state_string] * valid_moves #verify product
+            sum = np.sum(self.Ps[state_string])
+            if (sum > 0): #here we assume elements of PS are positive !!
+                self.Ps[state_string] = self.Ps[state_string] / sum
+            else: #all valid moves have p = 0
+                print("no valid moves in Ps[State]")
+                self.Ps[state_string] = valid_moves
+                self.Ps[state_string] /= np.sum(self.Ps[state_string])
+        
+            self.Ms[state_string] = valid_moves
+            self.Ns[state_string] = 0
+            value = self.simulate(state)
+            return value
+
+
+        #"Normal" node
+        best_UCB = -123456789
+        best_action = None
+
+        for action in state.actions():
+            if (state_string, action) in self.Qsa:
+                #u = self.Qsa[(state_string, action)] + self.args.CPUCT*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string])/(1+self.Nsa[(state_string,action)])
+                u = self.Qsa[(state_string, action)] + self.args.cexplo * math.sqrt(math.log(self.Ns[state_string]) / self.Nsa[(state_string, action)])
+            else:
+                #u = self.args.cpuct*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string] + 0.00000001) # Q could be initializerd by network here
+                u = 123456
+            if u > best_UCB:
+                best_UCB = u
+                best_action = action
+        a = best_action
+        
+        state.do_action(a) #state is now next_state
+        v = self.search(state)
+
+        if ((state_string, a) in self.Qsa):
+            self.Qsa[(state_string, a)] = (self.Qsa[(state_string, a)] * self.Nsa[(state_string, a)] + v) / (self.Nsa[(state_string, a)] + 1)
+            self.Nsa[(state_string, a)] += 1
+        else:
+            self.Qsa[(state_string, a)] = v
+            self.Nsa[(state_string, a)] = 1
+        #print("Player: ", playa, "winner: ", winner, "v: ", v)
+        self.Ns[state_string] += 1
+        return -v
+
+    def self_play(self, dataset = Dataseto(), root = state(), iterations = 400, turn = 0): # DIRICHELET NMOISE
+        s = root.stringify()
+        if (s not in self.Ts): #terminal states
+            self.Ts[s] = root.is_game_over()
+        if (self.Ts[s] != 0):
+            return (self.Ts[s])
+
+        for _ in range(iterations):
+            current_state = copy.deepcopy(root)
+            self.search(current_state)
+
+        temperature = 1
+        if (turn > 12):
+            temperature = 0.1
+        policy = self.get_policy(root, temperature)
+        dataset_index = dataset.add_point(state=root, policy=policy)
+        action = np.random.choice(7, 1, p=policy)[0]
+        root.do_action(action)
+        v = self.self_play(dataset, root, iterations, turn + 1)
+
+        dataset.data[dataset_index].V = torch.tensor([v])
+        if ((s, action) in self.Qsa):
+            self.Qsa[(s, action)] = (self.Qsa[(s, action)] * self.Nsa[(s, action)] + v) / (self.Nsa[(s, action)] + 1)
+            self.Nsa[(s, action)] += 1
+        else:
+            self.Qsa[(s, action)] = v
+            self.Nsa[(s, action)] = 1
+        self.Ns[s] += 1
+        return -v
+
+    def search_net(self, state, net):
+        state_string = state.stringify()
+        if (state_string not in self.Ts): #terminal states
+            self.Ts[state_string] = state.is_game_over()
+        if (self.Ts[state_string] != 0):
+            return (self.Ts[state_string])
+
+        if (state_string not in self.Ps): #LEAF
+            P, V = net.evaluate(state)
+            valid_moves = state.valid_moves_mask()
+            self.Ps[state_string] = valid_moves
+            #self.Ps[state_string] = self.Ps[state_string] * valid_moves #verify product
+            sum = np.sum(self.Ps[state_string])
+            if (sum > 0): #here we assume elements of PS are positive !!
+                self.Ps[state_string] = self.Ps[state_string] / sum
+            else: #all valid moves have p = 0
+                print("no valid moves in Ps[State]")
+                self.Ps[state_string] = valid_moves
+                self.Ps[state_string] /= np.sum(self.Ps[state_string])
+        
+            self.Ms[state_string] = valid_moves
+            self.Ns[state_string] = 0
+            value = self.simulate(state)
+            return value
+
+
+        #"Normal" node
+        best_UCB = -123456789
+        best_action = None
+
+        for action in state.actions():
+            if (state_string, action) in self.Qsa:
+                #u = self.Qsa[(state_string, action)] + self.args.CPUCT*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string])/(1+self.Nsa[(state_string,action)])
+                u = self.Qsa[(state_string, action)] + self.args.cexplo * math.sqrt(math.log(self.Ns[state_string]) / self.Nsa[(state_string, action)])
+            else:
+                #u = self.args.cpuct*self.Ps[state_string][action]*math.sqrt(self.Ns[state_string] + 0.00000001) # Q could be initializerd by network here
+                u = 123456
+            if u > best_UCB:
+                best_UCB = u
+                best_action = action
+        a = best_action
+        
+        state.do_action(a) #state is now next_state
+        v = self.search(state)
+
+        if ((state_string, a) in self.Qsa):
+            self.Qsa[(state_string, a)] = (self.Qsa[(state_string, a)] * self.Nsa[(state_string, a)] + v) / (self.Nsa[(state_string, a)] + 1)
+            self.Nsa[(state_string, a)] += 1
+        else:
+            self.Qsa[(state_string, a)] = v
+            self.Nsa[(state_string, a)] = 1
+        #print("Player: ", playa, "winner: ", winner, "v: ", v)
+        self.Ns[state_string] += 1
+        return -v
+
+    def self_play_net(self, net, dataset = Dataseto(), root = state(), iterations = 400, turn = 0): # DIRICHELET NMOISE
+        s = root.stringify()
+        if (s not in self.Ts): #terminal states
+            self.Ts[s] = root.is_game_over()
+        if (self.Ts[s] != 0):
+            return (self.Ts[s])
+
+        for _ in range(iterations):
+            current_state = copy.deepcopy(root)
+            self.search(current_state)
+
+        temperature = 1
+        if (turn > 12):
+            temperature = 0.1
+        policy = self.get_policy(root, temperature)
+        dataset_index = dataset.add_point(state=root, policy=policy)
+        action = np.random.choice(7, 1, p=policy)[0] ## GET MAX F(Q + U)
+        root.do_action(action)
+        v = self.self_play(dataset, root, iterations, turn + 1)
+
+        dataset.data[dataset_index].V = torch.tensor([v])
+        if ((s, action) in self.Qsa):
+            self.Qsa[(s, action)] = (self.Qsa[(s, action)] * self.Nsa[(s, action)] + v) / (self.Nsa[(s, action)] + 1)
+            self.Nsa[(s, action)] += 1
+        else:
+            self.Qsa[(s, action)] = v
+            self.Nsa[(s, action)] = 1
+        self.Ns[s] += 1
+        return -v
+
+    def	play_vs_MCTS(self):
+        turn = 0
+        stat = state()
+        while (stat.is_game_over() == 0):
+            if (turn % 2 == 0):
+                self.self_play(root = copy.deepcopy(stat), turn = turn)
+                self.self_play(root = copy.deepcopy(stat), turn = turn)
+                stat.do_action(self.get_policy(stat).argmax())
+            else:
+                move = -1
+                while (not(move >= 0 and move < 7)):
+                    move = int(input("press a key between 0 an 9\n"))
+                stat.do_action(move)
+            stat.display()
+            turn += 1
+
+
+
+class OLD():
+    def __init__(self, node = node(), dataset = Dataseto(), tree_policy = None, rollout_policy = None):
         '''
             tree policy takes a node and returns an action, rollout_policy takes a node and retruns a value.
         '''
@@ -31,7 +363,7 @@ class MCTS():
             self.rollout_policy = rollout_policy
         else:
             self.rollout_policy = lambda : self.simulate()
-        self.dnn = Deep_Neural_Net()
+        #self.dnn = Deep_Neural_Net()
 
     def launch(self):
         self.current_node = self.tree_root
@@ -41,11 +373,11 @@ class MCTS():
     
     def MCTS_to_reward(self):
         node = self.current_node
+        print(node.state.stringify())
         if (node.is_terminal): #game is finished
             node.visits += 1
             v = node.state.get_reward()
             node.total_reward += v
-            print("PLAYA: ", node.player, "winna: ", node.state.victory, "  v: ", v)
             return -v
 
         if (node.is_fully_expanded == False and node.P == None):  #first visit
@@ -72,7 +404,8 @@ class MCTS():
             return -v
         print(" YOOOOOO FUCKED UP BROOOO")
 
-    def self_play(self, dataset = dataset(), iterations = 400): # DIRICHELET NMOISE
+    def self_play(self, iterations = 400): # DIRICHELET NMOISE
+        dataset = self.dataset
         if (self.root.is_terminal):
             return -(self.root.state.get_reward())
         initial_state = copy.deepcopy(self.root.state)
@@ -81,7 +414,6 @@ class MCTS():
             self.current_node = self.root
             self.current_node.state.copy(initial_state)
             self.MCTS_to_reward()
-        
         self.current_node = self.root
         self.current_node.state.copy(initial_state)
         policy = self.policy_policy()
@@ -90,8 +422,8 @@ class MCTS():
         #action = self.select_highest_visits()
         self.play_action(action)
         self.root = self.current_node
-        v = self.self_play(dataset)
-        dataset.data[dataset_index].V = np.array([v])
+        v = self.self_play()
+        dataset.data[dataset_index].V = torch.tensor([v])
         return -v
 
     def play_one_move(self, iterations = 400):
@@ -115,7 +447,7 @@ class MCTS():
         self.root = self.tree_root
         self.current_node = self.root
         self.current_node.state.reset()
-        self.self_play(self.dataset)
+        self.self_play()
     
     def policy_policy(self, node = None): #IT FUCKED UP
         '''
@@ -126,15 +458,9 @@ class MCTS():
         '''
         if node == None :
             node = self.root
-        policy = np.zeros(7)
+        policy = np.zeros(7, dtype=float)
         for action in node.actions:
             policy[action] = node.children.get(action).visits
-#        if (self.root.state.turn < 25): #DEFINE here
-#            temperature = 1
-#        else:
-#            temperature = 1   #SHOULD BE 0.1
-#        for idx in range(len(policy)):
-#            policy[idx] = policy[idx]**(1/temperature)
         summ = sum(policy)
         for action in node.actions:
             policy[action] = policy[action] / summ
