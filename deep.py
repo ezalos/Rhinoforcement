@@ -9,7 +9,8 @@ matplotlib.use("Agg")
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
-
+from ARGS import DotDict
+from ARGS import ARGS
 import numpy as np
 from state import state
 
@@ -18,6 +19,18 @@ LAYERS = 64
 RESBLOCKS = 7
 K_SIZE = 3
 RESIDUAL_TOWER_SIZE = 3
+
+def cross_entropy_loss(input, target):
+    loss = 0
+    for i in range(7):
+        loss = loss + (input[i] * torch.log(target[i]))
+    return (-loss)
+
+def cross_entropy_loss_batch(input, target):
+    loss = 0
+    for i in range(7):
+        loss = loss + (input[i] * torch.log(target[i]))
+    return (-loss)
 
 class ResBlock(nn.Module):
     def __init__(self):
@@ -81,7 +94,7 @@ class ValueHead(nn.Module):
         v = F.relu(v)
         v = self.lin2(v)
 
-        v = F.tanh(v)
+        v = torch.tanh(v)
 
         return v
 
@@ -112,6 +125,7 @@ class ConnectNet(nn.Module):
             setattr(self, "res_%i" % block,ResBlock())
         self.PolicyHead = PolicyHead()
         self.ValueHead = ValueHead()
+        self.Value_loss = nn.MSELoss()
     
     def forward(self,s):
         s = self.conv(s)
@@ -121,14 +135,70 @@ class ConnectNet(nn.Module):
         v = self.ValueHead(s)
         return p, v
 
+    def VLoss(self, V, target):
+        return(self.Value_loss(V, target))
+
+    def PLoss(self, P, target):
+        return (cross_entropy_loss(P, target))
+
+    def evaluate(self, unencoded_s):
+        s = torch.from_numpy(unencoded_s.encode_board()).float()
+        t = s.new_empty(1, 3, 6, 7)  ## create batch of size 1
+        t[0] = s
+        return (self.forward(t))
+
+    def evaluate_encoded(self, s):
+        t = s.new_empty(1, 3, 6, 7)  ## create batch of size 1
+        t[0] = s
+        return (self.forward(t))
+
+class NetHandler():
+    def __init__(self, net, args):
+        self.net = net
+        self.args = args
+
+    def cross_entropy(self, pred, soft_targets):
+        logsoftmax = torch.nn.LogSoftmax()
+        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+
+    def loss(self, P, V, PGT, VGT):
+        MSEloss = torch.nn.MSELoss()
+        a = MSEloss(V.float(), VGT.float())
+        b = MSEloss(P.float(), PGT.float()) * 7
+        return (b + a)    
+
+    def train(self, trainloader):
+
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        net = self.net
+        net.to(device)
+        net.train()
+        optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False) ##wtf is this the right one ??
+
+        for epoch in range(self.args.Epochs):  # loop over the dataset multiple times
+            running_loss = 0.0
+            for i, data in enumerate(trainloader, 0):
+                # get the inputs; data is a list of [inputs, labels]
+                S, PGT, VGT = data[0].to(device), data[1].to(device), data[2].to(device)
+                # zero the parameter gradients
+                optimizer.zero_grad()
+                # forward + backward + optimize
+                P, V = net(S)
+                losses = self.loss(P, V, PGT, VGT)
+                losses.backward()
+                optimizer.step()
+                # print statistics
+                running_loss += losses.item()
+            print('[%d, %5d] 100 * loss: %.3f' % (epoch + 1, i + 1, running_loss / len(trainloader)))
+        print('Finished Training')
+
 class AlphaLoss(torch.nn.Module):
     def __init__(self):
         super(AlphaLoss, self).__init__()
 
     def forward(self, y_value, value, y_policy, policy):
         value_error = (value - y_value) ** 2
-        policy_error = torch.sum((-policy* 
-                                  (1e-8 + y_policy.float()).float().log()), 1)
+        policy_error = torch.sum((-policy* (1e-8 + y_policy.float()).float().log()), 1)
         total_error = (value_error.view(-1).float() + policy_error).mean()
         return total_error
 
@@ -220,46 +290,6 @@ class Training():
         t[0] = s
         return (self.forward(t))
 
-class NetHandler():
-    def __init__(self, net, args):
-        self.net = net
-        self.args = args
-
-    def cross_entropy(self, pred, soft_targets):
-        logsoftmax = torch.nn.LogSoftmax()
-        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
-
-
-    def loss(self, P, V, PGT, VGT):
-        MSEloss = torch.nn.MSELoss()
-        a = MSEloss(V.float(), VGT.float())
-        b = MSEloss(P.float(), PGT.float()) * 7
-        return (b + a)    
-
-    def train(self, trainloader):
-
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        net = self.net
-        net.to(device)
-        net.train()
-        optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False) ##wtf is this the right one ??
-
-        for epoch in range(self.args.Epochs):  # loop over the dataset multiple times
-            running_loss = 0.0
-            for i, data in enumerate(trainloader, 0):
-                # get the inputs; data is a list of [inputs, labels]
-                S, PGT, VGT = data[0].to(device), data[1].to(device), data[2].to(device)
-                # zero the parameter gradients
-                optimizer.zero_grad()
-                # forward + backward + optimize
-                P, V = net(S)
-                losses = self.loss(P, V, PGT, VGT)
-                losses.backward()
-                optimizer.step()
-                # print statistics
-                running_loss += losses.item()
-            print('[%d, %5d] 100 * loss: %.3f' % (epoch + 1, i + 1, running_loss / len(trainloader)))
-        print('Finished Training')
 
 #
 #class ConvBlock(nn.Module):

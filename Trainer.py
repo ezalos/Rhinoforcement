@@ -1,79 +1,36 @@
 from MCTS import MCTS
-from MCTS import DotDict
 from state import state
 import copy
 import numpy
-from deep import NetHandler
 from deep import ConnectNet
 from data import Dataseto
-from data import DataHandler
-import time
+from ARGS import DotDict
+from ARGS import ARGS
+import torch.optim as optim
 
-ARGS = DotDict({
-    'numIters': 1000,
-    'numEps': 100,              # Number of complete self-play games to simulate during a new iteration.
-    'tempThreshold': 15,        #
-    'updateThreshold': 0.6,     # During arena playoff, new neural net will be accepted if threshold or more of games are won.
-    'maxlenOfQueue': 200000,    # Number of game examples to train the neural networks.
-    'numMCTSSims': 25,          # Number of games moves for MCTS to simulate.
-    'arenaCompare': 40,         # Number of games to play during arena play to determine if new net will be accepted.
-    'cpuct': 1,
-    'cexplo': 2,
-    'checkpoint': './temp/',
-    'load_model': False,
-    'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
-    'maxHistory': 5,
-    'batch_size': 8,
-    'Episodes': 100,
-    'Epochs': 10000
-})
 
-def self_play(MCTS):
-    game = state()
-    value = 0
-    while (game.victory == ''):
-        for _ in range(400):
-            root = copy.deepcopy(game)
-            v = MC.search(root)
-        game.do_action(numpy.random.choice(7, 1, p = MC.get_policy(game))[0])
-        game.display()
-    return value
 
-def printo(MC, state = state()):
-    s = state.stringify()
-    for i in range(7):
-        print("Q: ", MC.Qsa[(s, i)])
-        print("N: ", MC.Nsa[(s, i)])
-
-#net = ConnectNet()
-#jo = MCTS(net)
-#dd = Dataseto()
-#v = 0
-#for i in range(100):
-#    start = time.time()
-#    v += jo.self_play(dd)
-#    print(time.time() - start)
 
 class Trainer():
-    def __init__(self, net= ConnectNet(), args = ARGS):
-        self.MCTS = MCTS(net, args)
-        self.dataHandler = DataHandler(args)
+    def __init__(self, net = ConnectNet(), args = ARGS, dataset = Dataseto(), MC = 0):
+        if (MC == 0):
+            self.MCTS = MCTS(net, args)
+        else:
+            MC = MCTS
+        self.dataset = dataset
         self.args = args
         self.net = net
-        self.net.to()
         self.netHandler = NetHandler(net, args)
 
     def createSet(self):
         dataset = Dataseto()
         i = 0
         while len(dataset) < 1000:
-            MCTS = MCTS(self.net, self.args)
-            MCTS.self_play(dataset=dataset, root=state())
+            self.MCTS.self_play(dataset=self.dataset, root=state())
             i += 1
             print(i)
         print("LENNN: ", len(dataset))
         
-        self.dataHandler.add_dataset(dataset)
 
     def train(self):
         net = self.net
@@ -87,6 +44,30 @@ class Trainer():
     def execute(self):
         self.createSet()
         self.train()
+
+
+def train_net(net, dataset):
+    optimizer = optim.SGD(net.parameters(), lr=0.001)
+    for epoch in range(2):  # loop over the dataset multiple times
+
+        running_loss = 0.0
+        for i, data in enumerate(trainloader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = data[0].to(device), data[1].to(device)
+            # zero the parameter gradients
+            optimizer.zero_grad()
+    
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            # print statistics
+            running_loss += loss.item()
+            if i % 2000 == 1999:    # print every 2000 mini-batches
+                print('[%d, %5d] loss: %.3f' %
+                      (epoch + 1, i + 1, running_loss / 2000))
+                running_loss = 0.0
 
 t = Trainer()
 t.execute()
