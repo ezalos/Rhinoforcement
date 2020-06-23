@@ -13,7 +13,7 @@ from ARGS import DotDict
 from ARGS import ARGS
 import numpy as np
 from state import state
-
+import pprint
 
 LAYERS = 64
 RESBLOCKS = 7
@@ -27,11 +27,10 @@ def cross_entropy_loss(input, target):
     return (-loss)
 
 def cross_entropy_loss_batch(input, target):
-    batch_size = input.size()[0] - 1
     loss = 0
     for i in range(7):
         loss = loss + (input[:, i] * torch.log(target[:, i]))
-    return (-loss)
+    return (-(loss.mean()))
 
 class ResBlock(nn.Module):
     def __init__(self):
