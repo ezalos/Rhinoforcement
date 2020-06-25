@@ -157,6 +157,7 @@ class NetHandler():
         self.net = net
         self.args = args
         self.optimizer = 0
+        self.MSELoss = torch.nn.MSELoss()
 
 #    def cross_entropy(self, pred, soft_targets):
 #        logsoftmax = torch.nn.LogSoftmax()
@@ -169,7 +170,8 @@ class NetHandler():
         return (-(loss.mean()))
 
     def loss(self, P, V, PGT, VGT):
-        a = torch.nn.MSEloss(V.float(), VGT.float())
+        #print("\nP\n", P, "\nV\n", V, "\nVGT\n", VGT, "\nPGT\n", PGT)
+        a = self.MSELoss(V, VGT)
         b = self.cross_entropy_loss_batch(P, PGT)
         return (b + a)
 

@@ -70,6 +70,3 @@ def train_net(net, dataset):
                 print('[%d, %5d] loss: %.3f' %
                       (epoch + 1, i + 1, running_loss / 2000))
                 running_loss = 0.0
-
-t = Trainer()
-t.execute()
