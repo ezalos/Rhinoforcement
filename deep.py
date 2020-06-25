@@ -156,24 +156,34 @@ class NetHandler():
     def __init__(self, net, args):
         self.net = net
         self.args = args
+        self.optimizer = 0
 
-    def cross_entropy(self, pred, soft_targets):
-        logsoftmax = torch.nn.LogSoftmax()
-        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+#    def cross_entropy(self, pred, soft_targets):
+#        logsoftmax = torch.nn.LogSoftmax()
+#        return torch.mean(torch.sum(- soft_targets * logsoftmax(pred), 1))
+
+    def cross_entropy_loss_batch(self, input, target):
+        loss = 0
+        for i in range(7):
+            loss = loss + (input[:, i] * torch.log(target[:, i]))
+        return (-(loss.mean()))
 
     def loss(self, P, V, PGT, VGT):
-        MSEloss = torch.nn.MSELoss()
-        a = MSEloss(V.float(), VGT.float())
-        b = MSEloss(P.float(), PGT.float()) * 7
-        return (b + a)    
+        a = torch.nn.MSEloss(V.float(), VGT.float())
+        b = self.cross_entropy_loss_batch(P, PGT)
+        return (b + a)
+
+    def train_init(self):
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.net.to(device)
+        self.net.train()
+        self.optimizer = optim.Adam(self.net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False) ##wtf is this the right one ??
 
     def train(self, trainloader):
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         net = self.net
-        net.to(device)
-        net.train()
-        optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False) ##wtf is this the right one ??
+        optimizer = self.optimizer
 
         for epoch in range(self.args.Epochs):  # loop over the dataset multiple times
             running_loss = 0.0
@@ -191,16 +201,6 @@ class NetHandler():
                 running_loss += losses.item()
             print('[%d, %5d] 100 * loss: %.3f' % (epoch + 1, i + 1, running_loss / len(trainloader)))
         print('Finished Training')
-
-class AlphaLoss(torch.nn.Module):
-    def __init__(self):
-        super(AlphaLoss, self).__init__()
-
-    def forward(self, y_value, value, y_policy, policy):
-        value_error = (value - y_value) ** 2
-        policy_error = torch.sum((-policy* (1e-8 + y_policy.float()).float().log()), 1)
-        total_error = (value_error.view(-1).float() + policy_error).mean()
-        return total_error
 
 class Deep_Neural_Net():
     def __init__(self):

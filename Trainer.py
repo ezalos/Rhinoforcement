@@ -6,7 +6,9 @@ from deep import ConnectNet
 from data import Dataseto
 from ARGS import DotDict
 from ARGS import ARGS
+from deep import NetHandler
 import torch.optim as optim
+import torch
 
 
 
@@ -23,19 +25,18 @@ class Trainer():
         self.netHandler = NetHandler(net, args)
 
     def createSet(self):
-        dataset = Dataseto()
         i = 0
-        while len(dataset) < 1000:
+        while len(self.dataset) < 1000:
             self.MCTS.self_play(dataset=self.dataset, root=state())
             i += 1
             print(i)
-        print("LENNN: ", len(dataset))
+        print("LENNN: ", len(self.dataset))
         
 
     def train(self):
         net = self.net
         net.train()
-        trainLoader = self.dataHandler.get_data_loader()
+        trainLoader = torch.utils.data.DataLoader(self.dataset, batch_size=8, shuffle=True, num_workers=1)
         self.netHandler.train(trainLoader)
 
     def arena_fightooo(self, nn1, nn2):
@@ -48,6 +49,7 @@ class Trainer():
 
 def train_net(net, dataset):
     optimizer = optim.SGD(net.parameters(), lr=0.001)
+    trainLoader = torch.utils.data.DataLoader(self.dataset, batch_size=8, shuffle=True, num_workers=2)
     for epoch in range(2):  # loop over the dataset multiple times
 
         running_loss = 0.0
