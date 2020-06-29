@@ -18,7 +18,8 @@ import pprint
 LAYERS = 64
 RESBLOCKS = 7
 K_SIZE = 3
-RESIDUAL_TOWER_SIZE = 3
+RESIDUAL_TOWER_SIZE = 11
+DROPOUT_P = 0.2
 
 def cross_entropy_loss(input, target):
     loss = 0
@@ -39,14 +40,18 @@ class ResBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(LAYERS)
         self.conv2 = nn.Conv2d(LAYERS, LAYERS, K_SIZE, padding=1)
         self.bn2 = nn.BatchNorm2d(LAYERS)
+        self.drop = nn.Dropout(p=DROPOUT_P)
+        self.drop2 = nn.Dropout(p=DROPOUT_P)
     
     def forward(self, x):
         res = x
         x = self.conv1(x)
         x = self.bn1(x)
+        x = self.drop(x)
         x = F.relu(x)
         x = self.conv2(x)
         x = self.bn2(x)
+        x = self.drop2(x)
         x += res
         x = F.relu(x)
         return (x)
@@ -68,10 +73,12 @@ class ConvBlock(nn.Module):
         super(ConvBlock, self).__init__()
         self.conv = nn.Conv2d(3, LAYERS, K_SIZE, padding=1)
         self.bn = nn.BatchNorm2d(LAYERS)
+        self.drop = nn.Dropout(p=DROPOUT_P)
     
     def forward(self, x):
         x = self.conv(x)
-        x = self.bn(x)  
+        x = self.bn(x)
+        x = self.drop(x)  
         x = F.relu(x)
         return (x)
 
@@ -172,7 +179,7 @@ class NetHandler():
     def loss(self, P, V, PGT, VGT):
         #print("\nP\n", P, "\nV\n", V, "\nVGT\n", VGT, "\nPGT\n", PGT)
         a = self.MSELoss(V, VGT)
-        b = self.cross_entropy_loss_batch(P, PGT)
+        b = self.MSELoss(P, PGT)
         return (b + a)
 
     def train_init(self):
@@ -201,8 +208,22 @@ class NetHandler():
                 optimizer.step()
                 # print statistics
                 running_loss += losses.item()
-            print('[%d, %5d] 100 * loss: %.3f' % (epoch + 1, i + 1, running_loss / len(trainloader)))
-        print('Finished Training')
+#            print('[%d, %5d] 100 * loss: %.3f' % (epoch + 1, i + 1, running_loss / len(trainloader)))
+
+    def test_error(self, trainloader):
+
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        net = self.net
+        net.eval()
+        losses = 0.0
+        for i, data in enumerate(trainloader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            S, PGT, VGT = data[0].to(device), data[1].to(device), data[2].to(device)
+            P, V = net(S)
+            losses = self.loss(P, V, PGT, VGT)
+            # print statistics
+        print('100 * loss: %.3f' % (losses.item() / len(trainloader)))
+        net.train()
 
 class Deep_Neural_Net():
     def __init__(self):

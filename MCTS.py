@@ -185,7 +185,7 @@ class MCTS():
         self.Ns[state_string] += 1
         return -v
 
-    def self_play(self, dataset = Dataseto(), root = state(), iterations = 100, turn = 0): # DIRICHELET NMOISE
+    def self_play(self, dataset = Dataseto(), root = state(), iterations = 300, turn = 0): # DIRICHELET NMOISE
         s = root.stringify()
         if (s not in self.Ts): #terminal states
             self.Ts[s] = root.is_game_over()

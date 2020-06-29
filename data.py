@@ -48,11 +48,13 @@ class Dataseto(data.Dataset):
             self.data.append(datapoint(torch.from_numpy(state.encode_board()).float(), torch.from_numpy(policy).float()))
             self.dict[state.stringify()] = len(self.data) - 1
         else:
-            print("Duplicate")
             self.data[a] = datapoint(torch.from_numpy(state.encode_board()).float(), torch.from_numpy(policy).float())
             return (a)
         return (len(self.data) - 1)
 
+    def reset(self):
+        self.data = []
+        self.dict = {}
 class DataHandler(data.Dataset):
     def __init__(self, args): #optimize handling by popping from training set on removal instead of rebuilding
         self.batch_size = args.batch_size

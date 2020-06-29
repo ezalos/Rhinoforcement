@@ -28,5 +28,5 @@ ARGS = DotDict({
     'maxHistory': 5,
     'batch_size': 8,
     'Episodes': 100,
-    'Epochs': 200
+    'Epochs': 20
 })
